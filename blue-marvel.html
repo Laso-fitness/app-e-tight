@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0D0D0F">
+<title>Blue Marvel · Laso Fitness</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#C9A227;--gold-lt:#F0D060;--ink:#0D0D0F;--ink2:#1A1A1A;--ink3:#242424;
+  --paper:#FAFAF7;--white:#FFFFFF;--slate:#4A5568;--green:#2D6A4F;
+  --blue:#185FA5;--red:#C0392B;--border:rgba(255,255,255,0.10);
+  --text:#F0EFE8;--text-dim:rgba(240,239,232,0.55);
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--ink);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+.nav{background:var(--ink2);border-bottom:1px solid var(--border);padding:14px 20px 12px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.nav-back{background:none;border:none;color:var(--gold);font-size:20px;cursor:pointer;padding:0;touch-action:manipulation}
+.nav-title{font-size:15px;font-weight:500;letter-spacing:.02em}
+.nav-sub{font-size:11px;color:var(--text-dim)}
+
+/* PHASE TABS */
+.phase-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--ink2);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.phase-tab{flex:1;padding:12px 8px;font-size:12px;font-weight:500;color:var(--text-dim);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;touch-action:manipulation;min-width:80px;text-align:center}
+.phase-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* HERO */
+.hero{background:var(--ink2);padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.hero-phase{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.hero-title{font-size:24px;font-weight:500;margin-bottom:6px}
+.hero-sub{font-size:13px;color:var(--text-dim);line-height:1.5}
+
+/* PROGRESS */
+.progress-wrap{padding:20px}
+.progress-card{background:var(--ink2);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.progress-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:10px}
+.ring-row{display:flex;align-items:center;gap:16px}
+.ring-svg{flex-shrink:0}
+.ring-stats{flex:1}
+.ring-num{font-size:28px;font-weight:500;color:var(--gold);line-height:1}
+.ring-den{font-size:13px;color:var(--text-dim)}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-row:last-child{border:none}
+.stat-label{color:var(--text-dim)}
+.stat-val{font-weight:500;color:var(--text)}
+
+/* WEEK NAVIGATOR */
+.week-nav{padding:0 20px 20px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.week-btn{background:var(--ink3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;padding:8px 14px;cursor:pointer;touch-action:manipulation}
+.week-btn:active{opacity:.7}
+.week-label{font-size:15px;font-weight:500;text-align:center;flex:1}
+.week-phase{font-size:11px;color:var(--gold);text-align:center;display:block}
+
+/* DAY SELECTOR */
+.day-scroll{display:flex;gap:8px;padding:0 20px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.day-chip{background:var(--ink3);border:1px solid var(--border);border-radius:24px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;touch-action:manipulation;color:var(--text-dim)}
+.day-chip.active{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+
+/* SESSION CARD */
+.session-wrap{padding:0 20px 20px}
+.session-card{background:var(--ink2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.session-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--ink3)}
+.session-name{font-size:16px;font-weight:500}
+.session-meta{font-size:12px;color:var(--text-dim);margin-top:3px}
+
+/* EXERCISE LIST */
+.ex-list{padding:8px 0}
+.ex-row{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation}
+.ex-row:last-child{border:none}
+.ex-row:active{background:var(--ink3)}
+.ex-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s}
+.ex-check.done{background:var(--green);border-color:var(--green)}
+.ex-check.done::after{content:'✓';font-size:12px;color:#fff}
+.ex-info{flex:1}
+.ex-name{font-size:14px;font-weight:500;margin-bottom:2px}
+.ex-detail{font-size:12px;color:var(--text-dim)}
+.ex-completed{color:var(--green);opacity:.6}
+.ex-note{font-size:11px;color:var(--gold);margin-top:3px}
+
+/* BREATHWORK */
+.breath-section{padding:0 20px 20px}
+.breath-card{background:var(--ink2);border:1px solid rgba(201,162,39,0.3);border-radius:var(--radius);overflow:hidden}
+.breath-header{padding:14px 16px;background:rgba(201,162,39,0.08);border-bottom:1px solid rgba(201,162,39,0.2);display:flex;justify-content:space-between;align-items:center}
+.breath-title{font-size:15px;font-weight:500;color:var(--gold)}
+.breath-badge{font-size:10px;background:rgba(201,162,39,0.15);color:var(--gold);padding:3px 8px;border-radius:12px;border:1px solid rgba(201,162,39,0.3)}
+.breath-body{padding:16px}
+.breath-desc{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:14px}
+
+/* BREATH TIMER */
+.breath-timer-wrap{text-align:center;padding:20px 0}
+.breath-circle{width:140px;height:140px;border-radius:50%;border:3px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 16px;position:relative;transition:all 1s ease}
+.breath-circle.inhale{border-color:var(--gold);background:rgba(201,162,39,0.06)}
+.breath-circle.hold{border-color:var(--blue);background:rgba(24,95,165,0.06)}
+.breath-circle.exhale{border-color:var(--green);background:rgba(45,106,79,0.06)}
+.breath-state{font-size:15px;font-weight:500;color:var(--text-dim)}
+.breath-count{font-size:44px;font-weight:400;color:var(--text);line-height:1}
+.breath-controls{display:flex;gap:10px;justify-content:center;margin-top:8px}
+.btn{background:var(--gold);border:none;color:var(--ink);font-size:14px;font-weight:500;padding:12px 24px;border-radius:24px;cursor:pointer;touch-action:manipulation;font-family:inherit}
+.btn:active{opacity:.8}
+.btn-ghost{background:var(--ink3);border:1px solid var(--border);color:var(--text)}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:20px}
+.breath-rounds{font-size:13px;color:var(--text-dim);margin-top:12px;text-align:center}
+
+/* COMPLETE BUTTON */
+.complete-wrap{padding:0 20px 20px}
+.complete-btn{width:100%;background:var(--gold);border:none;color:var(--ink);font-size:16px;font-weight:500;padding:16px;border-radius:var(--radius);cursor:pointer;touch-action:manipulation;font-family:inherit}
+.complete-btn:active{opacity:.8}
+.complete-btn.done-btn{background:var(--green);color:#fff}
+
+/* SECTION LABELS */
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);padding:16px 20px 8px;font-weight:500}
+
+/* HRV CHECK */
+.hrv-card{margin:0 20px 20px;background:var(--ink2);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.hrv-title{font-size:14px;font-weight:500;margin-bottom:12px}
+.hrv-scale{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.hrv-option{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;cursor:pointer;touch-action:manipulation;transition:all .2s}
+.hrv-option.selected-green{border-color:var(--green);background:rgba(45,106,79,0.15)}
+.hrv-option.selected-yellow{border-color:#BA7517;background:rgba(186,117,23,0.15)}
+.hrv-option.selected-red{border-color:var(--red);background:rgba(192,57,43,0.15)}
+.hrv-dot{width:12px;height:12px;border-radius:50%;margin:0 auto 6px}
+.hrv-label{font-size:11px;font-weight:500}
+.hrv-rec{font-size:12px;color:var(--text-dim);line-height:1.5;padding:10px;background:var(--ink3);border-radius:var(--radius-sm)}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <button class="nav-back" onclick="history.back()">←</button>
+  <div>
+    <div class="nav-title">Blue Marvel Protocol</div>
+    <div class="nav-sub">Laso Fitness · 12-Week Program</div>
+  </div>
+</div>
+
+<div class="phase-tabs">
+  <button class="phase-tab active" onclick="setPhase(1,this)">Phase 1</button>
+  <button class="phase-tab" onclick="setPhase(2,this)">Phase 2</button>
+  <button class="phase-tab" onclick="setPhase(3,this)">Phase 3</button>
+  <button class="phase-tab" onclick="setPhase(4,this)">Breathwork</button>
+  <button class="phase-tab" onclick="setPhase(5,this)">Progress</button>
+</div>
+
+<!-- PHASE 1 VIEW -->
+<div id="view-1">
+<div class="hero">
+  <div class="hero-phase">Phase 1 · Weeks 1–4</div>
+  <div class="hero-title">Activation</div>
+  <div class="hero-sub">Master movement patterns. Build your aerobic base. Establish breathing habits. Track every session toward your 150 Hour Mission.</div>
+</div>
+
+<!-- HRV -->
+<div class="section-label">Today's readiness</div>
+<div class="hrv-card">
+  <div class="hrv-title">How does your body feel today?</div>
+  <div class="hrv-scale">
+    <div class="hrv-option" id="hrv-green" onclick="setHRV('green')">
+      <div class="hrv-dot" style="background:#2D6A4F"></div>
+      <div class="hrv-label" style="color:#2D6A4F">Green</div>
+      <div style="font-size:10px;color:var(--text-dim)">Ready</div>
+    </div>
+    <div class="hrv-option" id="hrv-yellow" onclick="setHRV('yellow')">
+      <div class="hrv-dot" style="background:#BA7517"></div>
+      <div class="hrv-label" style="color:#BA7517">Yellow</div>
+      <div style="font-size:10px;color:var(--text-dim)">Moderate</div>
+    </div>
+    <div class="hrv-option" id="hrv-red" onclick="setHRV('red')">
+      <div class="hrv-dot" style="background:#C0392B"></div>
+      <div class="hrv-label" style="color:#C0392B">Red</div>
+      <div style="font-size:10px;color:var(--text-dim)">Recover</div>
+    </div>
+  </div>
+  <div class="hrv-rec" id="hrv-rec">Tap green, yellow, or red to see your training recommendation for today.</div>
+</div>
+
+<!-- WEEK NAV -->
+<div class="week-nav">
+  <button class="week-btn" onclick="changeWeek(-1)">←</button>
+  <div>
+    <span class="week-label" id="weekLabel">Week 1</span>
+    <span class="week-phase" id="weekPhase">Activation</span>
+  </div>
+  <button class="week-btn" onclick="changeWeek(1)">→</button>
+</div>
+
+<!-- DAY SELECTOR -->
+<div class="day-scroll">
+  <div class="day-chip active" onclick="setDay(0,this)">Mon</div>
+  <div class="day-chip" onclick="setDay(1,this)">Tue</div>
+  <div class="day-chip" onclick="setDay(2,this)">Wed</div>
+  <div class="day-chip" onclick="setDay(3,this)">Thu</div>
+  <div class="day-chip" onclick="setDay(4,this)">Fri</div>
+  <div class="day-chip" onclick="setDay(5,this)">Sat</div>
+  <div class="day-chip" onclick="setDay(6,this)">Sun</div>
+</div>
+
+<!-- BREATHWORK WARM-UP -->
+<div class="section-label">Breathwork warm-up</div>
+<div class="breath-section">
+  <div class="breath-card">
+    <div class="breath-header">
+      <div class="breath-title">Box Breathing 4-4-4-4</div>
+      <div class="breath-badge">Phase 1</div>
+    </div>
+    <div class="breath-body">
+      <div class="breath-desc">Do 3 rounds before every strength session. Calms the nervous system. Prepares the body to train.</div>
+      <div class="breath-timer-wrap">
+        <div class="breath-circle" id="bCircle">
+          <div class="breath-state" id="bState">Ready</div>
+          <div class="breath-count" id="bCount">4</div>
+        </div>
+        <div class="breath-controls">
+          <button class="btn btn-ghost btn-sm" onclick="stopBreath()">Stop</button>
+          <button class="btn btn-sm" id="bStartBtn" onclick="startBreath()">Start</button>
+        </div>
+        <div class="breath-rounds" id="bRounds">3 rounds remaining</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCISES -->
+<div class="section-label" id="sessionLabel">Monday — Upper Body A</div>
+<div class="session-wrap">
+  <div class="session-card">
+    <div class="session-header">
+      <div class="session-name" id="sessionName">Upper Body A</div>
+      <div class="session-meta" id="sessionMeta">3 sets · 60s rest · ~40 minutes</div>
+    </div>
+    <div class="ex-list" id="exList"></div>
+  </div>
+</div>
+
+<div class="complete-wrap">
+  <button class="complete-btn" id="completeBtn" onclick="completeSession()">Complete Session →</button>
+</div>
+</div><!-- end view-1 -->
+
+<!-- BREATHWORK VIEW -->
+<div id="view-4" style="display:none">
+<div class="hero">
+  <div class="hero-phase">Blue Marvel Protocol</div>
+  <div class="hero-title">Breathwork Library</div>
+  <div class="hero-sub">Select your phase. Follow the timer. Document your experience.</div>
+</div>
+
+<div class="section-label">Phase 1 — Box breathing</div>
+<div class="breath-section">
+  <div class="breath-card">
+    <div class="breath-header">
+      <div class="breath-title">Box Breathing 4-4-4-4</div>
+      <div class="breath-badge">Weeks 1–4</div>
+    </div>
+    <div class="breath-body">
+      <div class="breath-desc">Use before every session. Inhale 4 counts · Hold 4 · Exhale 4 · Hold 4. 3 rounds minimum.</div>
+      <div class="breath-timer-wrap">
+        <div class="breath-circle" id="b1Circle"><div class="breath-state" id="b1State">Ready</div><div class="breath-count" id="b1Count">4</div></div>
+        <div class="breath-controls">
+          <button class="btn btn-ghost btn-sm" onclick="stopBreathTimer('b1')">Stop</button>
+          <button class="btn btn-sm" onclick="startBreathTimer('box','b1')">Start</button>
+        </div>
+        <div class="breath-rounds" id="b1Rounds">3 rounds</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label">Phase 2 — Power breathing</div>
+<div class="breath-section">
+  <div class="breath-card">
+    <div class="breath-header">
+      <div class="breath-title">Power Breathing — 30 Cycles</div>
+      <div class="breath-badge">Weeks 5–8</div>
+    </div>
+    <div class="breath-body">
+      <div class="breath-desc">30 deep power breaths · 30s exhale hold · Deep inhale 15s hold · Rest 2 min · 3 rounds total</div>
+      <div class="breath-timer-wrap">
+        <div class="breath-circle" id="b2Circle"><div class="breath-state" id="b2State">Ready</div><div class="breath-count" id="b2Count">30</div></div>
+        <div class="breath-controls">
+          <button class="btn btn-ghost btn-sm" onclick="stopBreathTimer('b2')">Stop</button>
+          <button class="btn btn-sm" onclick="startBreathTimer('power','b2')">Start</button>
+        </div>
+        <div class="breath-rounds" id="b2Rounds">3 rounds</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label">Phase 3 — Full Blue Marvel</div>
+<div class="breath-section">
+  <div class="breath-card">
+    <div class="breath-header">
+      <div class="breath-title">Full Blue Marvel Protocol</div>
+      <div class="breath-badge">Weeks 9–12</div>
+    </div>
+    <div class="breath-body">
+      <div class="breath-desc">40 power breaths · 60–90s exhale hold · Deep inhale 15s hold · Rest 3 min · 3 rounds · Physiological sigh × 5 after training</div>
+      <div class="breath-timer-wrap">
+        <div class="breath-circle" id="b3Circle"><div class="breath-state" id="b3State">Ready</div><div class="breath-count" id="b3Count">40</div></div>
+        <div class="breath-controls">
+          <button class="btn btn-ghost btn-sm" onclick="stopBreathTimer('b3')">Stop</button>
+          <button class="btn btn-sm" onclick="startBreathTimer('full','b3')">Start</button>
+        </div>
+        <div class="breath-rounds" id="b3Rounds">3 rounds</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label">Recovery — Physiological sigh</div>
+<div class="breath-section">
+  <div class="breath-card">
+    <div class="breath-header">
+      <div class="breath-title">Physiological Sigh × 5</div>
+      <div class="breath-badge">After any session</div>
+    </div>
+    <div class="breath-body">
+      <div class="breath-desc">Fastest scientific method to lower heart rate after max effort. Double inhale through nose (sniff, then bigger sniff), then long slow exhale through mouth. Repeat 5 times.</div>
+      <div class="breath-timer-wrap">
+        <div class="breath-circle" id="b4Circle"><div class="breath-state" id="b4State">Ready</div><div class="breath-count" id="b4Count">5</div></div>
+        <div class="breath-controls">
+          <button class="btn btn-ghost btn-sm" onclick="stopBreathTimer('b4')">Stop</button>
+          <button class="btn btn-sm" onclick="startBreathTimer('sigh','b4')">Start</button>
+        </div>
+        <div class="breath-rounds" id="b4Rounds">5 sighs</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- end view-4 -->
+
+<!-- PROGRESS VIEW -->
+<div id="view-5" style="display:none">
+<div class="hero">
+  <div class="hero-phase">Your Journey</div>
+  <div class="hero-title">150 Hour Mission</div>
+  <div class="hero-sub">Every session moves the ring. 150 hours transforms the machine.</div>
+</div>
+<div class="progress-wrap">
+  <div class="progress-card">
+    <div class="progress-label">Blue Marvel Progress</div>
+    <div class="ring-row">
+      <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
+        <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+        <circle cx="45" cy="45" r="38" fill="none" stroke="#C9A227" stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="238.76" stroke-dashoffset="238.76" id="missionRing" transform="rotate(-90 45 45)"
+          style="transition:stroke-dashoffset 1s ease"/>
+      </svg>
+      <div class="ring-stats">
+        <div class="ring-num" id="hrsLogged">0</div>
+        <div class="ring-den">of 150 hrs</div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="stat-row"><span class="stat-label">Sessions completed</span><span class="stat-val" id="sessCompleted">0</span></div>
+      <div class="stat-row"><span class="stat-label">Current phase</span><span class="stat-val" id="currPhase">Phase 1</span></div>
+      <div class="stat-row"><span class="stat-label">Current week</span><span class="stat-val" id="currWeek">Week 1</span></div>
+      <div class="stat-row"><span class="stat-label">Breathwork rounds completed</span><span class="stat-val" id="breathRounds">0</span></div>
+      <div class="stat-row"><span class="stat-label">Days until program complete</span><span class="stat-val" id="daysLeft">84</span></div>
+    </div>
+  </div>
+</div>
+<div class="section-label">Benchmarks</div>
+<div class="hrv-card">
+  <div class="hrv-title">Record your numbers</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    <div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">Max push-ups</div>
+      <input type="number" id="bm-pushup" placeholder="0" style="width:100%;background:var(--ink3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:8px 10px;font-size:16px;font-family:inherit" inputmode="numeric">
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">1-mile time (min)</div>
+      <input type="number" id="bm-mile" placeholder="0" style="width:100%;background:var(--ink3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:8px 10px;font-size:16px;font-family:inherit" step="0.1" inputmode="decimal">
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">Max plank (sec)</div>
+      <input type="number" id="bm-plank" placeholder="0" style="width:100%;background:var(--ink3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:8px 10px;font-size:16px;font-family:inherit" inputmode="numeric">
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">Breath hold (sec)</div>
+      <input type="number" id="bm-breath" placeholder="0" style="width:100%;background:var(--ink3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:8px 10px;font-size:16px;font-family:inherit" inputmode="numeric">
+    </div>
+  </div>
+  <button class="btn" style="width:100%" onclick="saveBenchmarks()">Save Benchmarks</button>
+</div>
+</div><!-- end view-5 -->
+
+<!-- VIEWS 2 and 3 placeholder (same structure as view-1) -->
+<div id="view-2" style="display:none">
+<div class="hero"><div class="hero-phase">Phase 2 · Weeks 5–8</div><div class="hero-title">Progressive Load</div><div class="hero-sub">Increase volume and intensity. Introduce full Blue Marvel breathwork. Build strength that carries into Phase 3.</div></div>
+<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:14px;margin-top:40px">
+  <div style="font-size:40px;margin-bottom:16px">🔒</div>
+  <div style="font-weight:500;color:var(--text);margin-bottom:8px">Unlocks at Week 5</div>
+  <div>Complete Phase 1 to unlock Phase 2 sessions. Keep logging your sessions in Phase 1 to progress.</div>
+</div>
+</div>
+
+<div id="view-3" style="display:none">
+<div class="hero"><div class="hero-phase">Phase 3 · Weeks 9–12</div><div class="hero-title">The Lock-In</div><div class="hero-sub">Peak performance. Full Blue Marvel protocol every session. Personal records. The transformation is measured here.</div></div>
+<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:14px;margin-top:40px">
+  <div style="font-size:40px;margin-bottom:16px">🔒</div>
+  <div style="font-weight:500;color:var(--text);margin-bottom:8px">Unlocks at Week 9</div>
+  <div>Complete Phase 2 to unlock The Lock-In. The final phase rewards everyone who makes it this far.</div>
+</div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+var WEEKS=['Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7','Week 8','Week 9','Week 10','Week 11','Week 12'];
+var PHASES=['Activation','Activation','Activation','Deload','Load','Load','Load','Deload','The Lock-In','The Lock-In','The Lock-In','Completion'];
+var SESSIONS=[
+  // Week 1
+  [{name:'Upper Body A',meta:'3 sets · 60s rest · ~40 min',exs:[
+    {n:'Box breathing warm-up',d:'4-4-4-4 × 3 rounds',note:'Do before the first set'},
+    {n:'Push-up',d:'3 × 12 · bodyweight'},
+    {n:'Dumbbell row',d:'3 × 12 each arm'},
+    {n:'Dumbbell shoulder press',d:'3 × 10'},
+    {n:'Dumbbell bicep curl',d:'3 × 12'},
+    {n:'Tricep dip',d:'3 × 12 · use a chair'},
+    {n:'Face pull / rear delt fly',d:'3 × 12'},
+  ]},
+  {name:'Cardio + Core',meta:'~35 min total',exs:[
+    {n:'Walk/jog intervals',d:'20 min · 2 min run / 1 min walk alternating'},
+    {n:'Dead bug',d:'3 × 10 each side'},
+    {n:'Bird dog',d:'3 × 12 each side'},
+    {n:'Plank',d:'3 × 45 seconds'},
+  ]},
+  {name:'Lower Body A',meta:'3 sets · 60s rest · ~40 min',exs:[
+    {n:'Box breathing warm-up',d:'4-4-4-4 × 3 rounds'},
+    {n:'Bodyweight squat',d:'3 × 15'},
+    {n:'Reverse lunge',d:'3 × 12 each leg'},
+    {n:'Glute bridge',d:'3 × 15'},
+    {n:'Dumbbell Romanian deadlift',d:'3 × 12'},
+    {n:'Calf raise',d:'3 × 20'},
+  ]},
+  {name:'Breathwork + Recovery',meta:'~40 min',exs:[
+    {n:'Box breathing 4-4-4-4',d:'5 rounds · full focused practice'},
+    {n:'Mobility flow',d:'10 minutes · hips, spine, shoulders'},
+    {n:'Foam rolling',d:'10 minutes · quads, hamstrings, calves, back'},
+    {n:'Pigeon pose',d:'90 seconds each side'},
+    {n:'Journal',d:'5 min · energy, soreness, notes'},
+  ]},
+  {name:'Full Body A',meta:'3 sets · 60s rest · ~40 min',exs:[
+    {n:'Box breathing warm-up',d:'4-4-4-4 × 3 rounds'},
+    {n:'Push-up',d:'3 × 12'},
+    {n:'Dumbbell row',d:'3 × 12 each arm'},
+    {n:'Goblet squat',d:'3 × 15'},
+    {n:'Dumbbell swing',d:'3 × 15'},
+    {n:'Mountain climber',d:'3 × 20'},
+    {n:'Physiological sigh cool-down',d:'5 sighs · end of session'},
+  ]},
+  {name:'Run Club / Long Cardio',meta:'25–30 min · conversational pace',exs:[
+    {n:'25–30 minute steady jog',d:'Easy pace · you can hold a conversation'},
+    {n:'3-3 breathing',d:'3 steps inhale · 3 steps exhale · practice throughout'},
+    {n:'Physiological sigh post-run',d:'5 sighs immediately after finishing'},
+  ]},
+  {name:'Rest Day',meta:'Recovery is training',exs:[
+    {n:'HRV morning check',d:'Log your number before getting up'},
+    {n:'Light stretching',d:'10 min · nothing intense'},
+    {n:'Journal',d:'Energy level, sleep quality, week highlights, targets for next week'},
+    {n:'Water goal',d:'80oz minimum today'},
+  ]},
+  ],
+];
+// Default all weeks to week 1 sessions for demo (app would load from API)
+for(var i=1;i<12;i++) SESSIONS.push(SESSIONS[0]);
+
+var state={week:0,day:0,completed:[],breathRounds:0,sessCompleted:0,benchmarks:{}};
+try{ var s=localStorage.getItem('bm_state'); if(s) state=Object.assign(state,JSON.parse(s)); } catch(e){}
+
+function save(){ try{localStorage.setItem('bm_state',JSON.stringify(state));}catch(e){} }
+
+// ── PHASE SWITCHING ──────────────────────────────────────────────────────────
+function setPhase(n,btn){
+  document.querySelectorAll('.phase-tab').forEach(function(t){t.classList.remove('active')});
+  btn.classList.add('active');
+  for(var i=1;i<=5;i++) document.getElementById('view-'+i).style.display='none';
+  document.getElementById('view-'+n).style.display='block';
+  if(n===5) updateProgress();
+}
+
+// ── WEEK + DAY ───────────────────────────────────────────────────────────────
+function changeWeek(d){
+  state.week=Math.max(0,Math.min(11,state.week+d));
+  document.getElementById('weekLabel').textContent=WEEKS[state.week];
+  document.getElementById('weekPhase').textContent=PHASES[state.week];
+  loadSession(); save();
+}
+function setDay(d,el){
+  state.day=d;
+  document.querySelectorAll('.day-chip').forEach(function(c){c.classList.remove('active')});
+  el.classList.add('active');
+  loadSession();
+}
+function loadSession(){
+  var sess=SESSIONS[state.week]?SESSIONS[state.week][state.day]:SESSIONS[0][state.day];
+  if(!sess) return;
+  document.getElementById('sessionLabel').textContent=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][state.day]+' — '+sess.name;
+  document.getElementById('sessionName').textContent=sess.name;
+  document.getElementById('sessionMeta').textContent=sess.meta;
+  var key=state.week+'-'+state.day;
+  var done=state.completed[key]||{};
+  var html=sess.exs.map(function(ex,i){
+    var isDone=done[i];
+    return '<div class="ex-row'+(isDone?' ex-completed':'')+'" onclick="toggleEx('+i+',this)">'
+      +'<div class="ex-check'+(isDone?' done':'')+'" id="chk-'+i+'"></div>'
+      +'<div class="ex-info"><div class="ex-name">'+ex.n+'</div>'
+      +'<div class="ex-detail">'+ex.d+'</div>'
+      +(ex.note?'<div class="ex-note">'+ex.note+'</div>':'')
+      +'</div></div>';
+  }).join('');
+  document.getElementById('exList').innerHTML=html;
+  updateCompleteBtn();
+}
+function toggleEx(i,row){
+  var key=state.week+'-'+state.day;
+  if(!state.completed[key]) state.completed[key]={};
+  state.completed[key][i]=!state.completed[key][i];
+  var isDone=state.completed[key][i];
+  row.classList.toggle('ex-completed',isDone);
+  var chk=document.getElementById('chk-'+i);
+  if(chk) chk.className='ex-check'+(isDone?' done':'');
+  updateCompleteBtn(); save();
+}
+function updateCompleteBtn(){
+  var sess=SESSIONS[state.week]?SESSIONS[state.week][state.day]:SESSIONS[0][state.day];
+  if(!sess) return;
+  var key=state.week+'-'+state.day;
+  var done=state.completed[key]||{};
+  var doneCount=Object.values(done).filter(Boolean).length;
+  var total=sess.exs.length;
+  var btn=document.getElementById('completeBtn');
+  if(doneCount>=total){btn.textContent='Session Complete ✓';btn.className='complete-btn done-btn';}
+  else{btn.textContent='Complete Session ('+doneCount+'/'+total+')';btn.className='complete-btn';}
+}
+function completeSession(){
+  var key=state.week+'-'+state.day;
+  state.sessCompleted=(state.sessCompleted||0)+1;
+  save(); alert('Session logged! +45 min toward your 150 Hour Mission.'); updateProgress();
+}
+
+// ── HRV ─────────────────────────────────────────────────────────────────────
+var HRV_RECS={
+  green:'Training as planned. Push on intervals. This is a performance day.',
+  yellow:'Train as planned. Do not try to exceed the session. Complete it, do not extend.',
+  red:'Reduce intensity by 30%. No sprint intervals. Active recovery or easy movement only.'
+};
+function setHRV(color){
+  ['green','yellow','red'].forEach(function(c){
+    document.getElementById('hrv-'+c).className='hrv-option';
+  });
+  document.getElementById('hrv-'+color).className='hrv-option selected-'+color;
+  document.getElementById('hrv-rec').textContent=HRV_RECS[color];
+}
+
+// ── BOX BREATH TIMER (main view) ─────────────────────────────────────────────
+var bTimer=null,bPhase=0,bCount=4,bRound=0,bRunning=false;
+var bPhases=['Inhale','Hold','Exhale','Hold'];
+var bColors=['inhale','hold','exhale','hold'];
+function startBreath(){
+  if(bRunning){stopBreath();return;}
+  bRunning=true;bPhase=0;bCount=4;bRound=0;
+  document.getElementById('bStartBtn').textContent='Pause';
+  tickBreath();
+}
+function tickBreath(){
+  if(!bRunning) return;
+  var circle=document.getElementById('bCircle');
+  circle.className='breath-circle '+bColors[bPhase];
+  document.getElementById('bState').textContent=bPhases[bPhase];
+  document.getElementById('bCount').textContent=bCount;
+  var rounds=Math.max(0,3-bRound);
+  document.getElementById('bRounds').textContent=rounds+' round'+(rounds!==1?'s':')+' remaining';
+  if(bCount>1){bCount--;bTimer=setTimeout(tickBreath,1000);}
+  else{bPhase++;
+    if(bPhase>=4){bPhase=0;bRound++;
+      if(bRound>=3){stopBreath();document.getElementById('bRounds').textContent='Complete ✓';return;}
+    }
+    bCount=4;bTimer=setTimeout(tickBreath,1000);
+  }
+}
+function stopBreath(){
+  clearTimeout(bTimer);bRunning=false;
+  document.getElementById('bStartBtn').textContent='Start';
+  document.getElementById('bCircle').className='breath-circle';
+  document.getElementById('bState').textContent='Ready';
+  document.getElementById('bCount').textContent='4';
+}
+
+// ── GENERIC BREATH TIMERS ─────────────────────────────────────────────────────
+var bTimers={};
+function startBreathTimer(type,id){
+  stopBreathTimer(id);
+  var cfg={
+    box:{phases:['Inhale','Hold','Exhale','Hold'],counts:[4,4,4,4],rounds:3,colors:['inhale','hold','exhale','hold']},
+    power:{phases:['Breathe','Release','Hold out','Inhale','Hold in'],counts:[2,2,30,5,15],rounds:3,colors:['inhale','exhale','hold','inhale','hold']},
+    full:{phases:['Breathe','Release','Hold out','Inhale','Hold in'],counts:[2,2,60,5,15],rounds:3,colors:['inhale','exhale','hold','inhale','hold']},
+    sigh:{phases:['Sniff in','Big inhale','Long exhale'],counts:[1,2,5],rounds:5,colors:['inhale','inhale','exhale']},
+  };
+  var c=cfg[type];
+  var phase=0,count=c.counts[0],round=0,running=true;
+  function tick(){
+    if(!running) return;
+    var circle=document.getElementById(id+'Circle');
+    if(circle) circle.className='breath-circle '+c.colors[phase];
+    var stateEl=document.getElementById(id+'State');
+    var countEl=document.getElementById(id+'Count');
+    var roundsEl=document.getElementById(id+'Rounds');
+    if(stateEl) stateEl.textContent=c.phases[phase];
+    if(countEl) countEl.textContent=count;
+    var rem=Math.max(0,c.rounds-round);
+    if(roundsEl) roundsEl.textContent=rem+(type==='sigh'?' sighs':' rounds')+' remaining';
+    if(count>1){count--;bTimers[id]=setTimeout(tick,1000);}
+    else{phase++;
+      if(phase>=c.phases.length){phase=0;round++;
+        if(round>=c.rounds){
+          running=false;
+          if(roundsEl) roundsEl.textContent='Complete ✓';
+          if(circle) circle.className='breath-circle';
+          state.breathRounds=(state.breathRounds||0)+1; save();
+          return;
+        }
+      }
+      count=c.counts[phase]; bTimers[id]=setTimeout(tick,1000);
+    }
+  }
+  bTimers[id+'_running']=true;
+  tick();
+}
+function stopBreathTimer(id){
+  clearTimeout(bTimers[id]);
+  bTimers[id+'_running']=false;
+  var circle=document.getElementById(id+'Circle');
+  if(circle) circle.className='breath-circle';
+  var stateEl=document.getElementById(id+'State');
+  if(stateEl) stateEl.textContent='Ready';
+}
+
+// ── PROGRESS ─────────────────────────────────────────────────────────────────
+function updateProgress(){
+  var hrs=Math.round((state.sessCompleted||0)*0.75*10)/10;
+  var pct=Math.min(1,hrs/150);
+  var ring=document.getElementById('missionRing');
+  if(ring) ring.style.strokeDashoffset=238.76*(1-pct);
+  var el=document.getElementById('hrsLogged');
+  if(el) el.textContent=hrs;
+  var sc=document.getElementById('sessCompleted');
+  if(sc) sc.textContent=state.sessCompleted||0;
+  var cp=document.getElementById('currPhase');
+  if(cp) cp.textContent='Phase '+Math.min(3,Math.floor((state.week||0)/4)+1);
+  var cw=document.getElementById('currWeek');
+  if(cw) cw.textContent=WEEKS[state.week||0];
+  var br=document.getElementById('breathRounds');
+  if(br) br.textContent=state.breathRounds||0;
+  var dl=document.getElementById('daysLeft');
+  if(dl) dl.textContent=Math.max(0,84-Math.round((state.sessCompleted||0)*7/6));
+  // Load saved benchmarks
+  if(state.benchmarks){
+    ['pushup','mile','plank','breath'].forEach(function(k){
+      var el=document.getElementById('bm-'+k);
+      if(el && state.benchmarks[k]) el.value=state.benchmarks[k];
+    });
+  }
+}
+function saveBenchmarks(){
+  state.benchmarks={
+    pushup:document.getElementById('bm-pushup').value,
+    mile:document.getElementById('bm-mile').value,
+    plank:document.getElementById('bm-plank').value,
+    breath:document.getElementById('bm-breath').value
+  };
+  save();
+  alert('Benchmarks saved!');
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById('weekLabel').textContent=WEEKS[state.week];
+document.getElementById('weekPhase').textContent=PHASES[state.week];
+loadSession();
+updateProgress();
+</script>
+</body>
+</html>
