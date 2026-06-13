@@ -2277,11 +2277,11 @@ window._aetDB = (function() {
       <div class="rc-section">
         <div class="rc-section-title">Join with Code</div>
         <input class="rc-input" id="rcCodeInput" type="text"
-          placeholder="Enter 6-digit club code (e.g. LASO01)"
+          placeholder="Enter your club code (e.g. WIN or LASO01)"
           style="text-transform:uppercase;letter-spacing:.1em;"
           oninput="this.value=this.value.toUpperCase()">
         <button class="rc-btn" onclick="joinClubByCode()">Join Club</button>
-        <div id="rcJoinMsg" style="font-size:13px;color:var(--slate);margin-top:8px;text-align:center;"></div>
+        <div id="rcJoinMsg" style="font-size:15px;font-weight:700;margin-top:10px;text-align:center;min-height:20px;"></div>
       </div>
 
       <div class="rc-section">
@@ -4744,34 +4744,48 @@ function rcUpdateDashCard(club) {
 }
 
 /* -- Join club -- */
+function rcMsg(text, isError) {
+  var msg = document.getElementById('rcJoinMsg');
+  if (!msg) return;
+  msg.textContent = text;
+  msg.style.color = isError ? '#c0392b' : '#1e8e4e';
+}
+
 async function joinClubByCode() {
   var code = (document.getElementById('rcCodeInput').value||'').trim().toUpperCase();
-  var msg = document.getElementById('rcJoinMsg');
-  if (!code) { msg.textContent = 'Enter a club code.'; return; }
-  if (!supabase || !aetCurrentUser) { msg.textContent = 'Please sign in first.'; return; }
+  if (!code) { rcMsg('Enter a club code.', true); return; }
+  if (!supabase || !aetCurrentUser) {
+    rcMsg('Please sign in first — opening sign-in…', true);
+    if (typeof showAetAuthScreen === 'function') setTimeout(showAetAuthScreen, 900);
+    return;
+  }
   try {
     var res = await supabase.from('run_clubs').select('*').eq('join_code', code).maybeSingle();
-    if (!res.data) { msg.textContent = 'Club not found. Check the code.'; return; }
+    if (res.error) { rcMsg('Lookup failed: ' + res.error.message, true); return; }
+    if (!res.data) { rcMsg('No club found with code ' + code + '. Check with your coach.', true); return; }
     await joinClub(res.data.id);
-  } catch(e) { msg.textContent = 'Error: ' + e.message; }
+  } catch(e) { rcMsg('Error: ' + e.message, true); }
 }
 
 async function joinClub(clubId) {
-  if (!supabase || !aetCurrentUser) return;
+  if (!supabase || !aetCurrentUser) {
+    rcMsg('Please sign in first — opening sign-in…', true);
+    if (typeof showAetAuthScreen === 'function') setTimeout(showAetAuthScreen, 900);
+    return;
+  }
   try {
     var displayName = (aetCurrentUser.user_metadata && aetCurrentUser.user_metadata.full_name) ||
                       aetCurrentUser.email.split('@')[0];
-    await supabase.from('club_members').upsert({
+    var up = await supabase.from('club_members').upsert({
       club_id: clubId,
       user_id: aetCurrentUser.id,
       display_name: displayName
     }, {onConflict: 'club_id,user_id'});
-    // increment member count
-    await supabase.rpc('increment_member_count', {club_id_param: clubId}).catch(function(){});
-    document.getElementById('rcJoinMsg').textContent = '✓ Joined! Ready to check in.';
+    if (up && up.error) { rcMsg('Join failed: ' + up.error.message, true); return; }
+    rcMsg('✓ Joined! Ready to check in.', false);
     await rcLoadMyClub();
     await rcLoadLasoClub();
-  } catch(e) { console.warn('Join error:', e); }
+  } catch(e) { rcMsg('Join error: ' + e.message, true); console.warn('Join error:', e); }
 }
 
 /* -- Check In & Session -- */
@@ -5258,7 +5272,7 @@ async function rcCheckAdmin() {
 
 async function rcCreateClub(name, joinCode, city, description) {
   var sb = supabase || window._aetDB;
-  if (!sb || !aetCurrentUser) return;
+  if (!sb || !aetCurrentUser) { showToast('Please sign in first', 'error'); return; }
   var res = await sb.from('run_clubs').insert({
     name: name,
     join_code: joinCode.toUpperCase(),
@@ -5267,10 +5281,15 @@ async function rcCreateClub(name, joinCode, city, description) {
     created_by: aetCurrentUser.id
   });
   if (res.error) {
-    showToast('Join code already taken — try another', 'error');
+    var emsg = res.error.message || '';
+    if (res.error.code === '23505' || emsg.indexOf('duplicate') !== -1 || emsg.indexOf('unique') !== -1) {
+      showToast('Join code already taken — try another', 'error');
+    } else {
+      showToast('Create failed: ' + emsg, 'error');
+    }
   } else {
     showToast('Club created! Code: ' + joinCode.toUpperCase(), 'gold');
-    setTimeout(function() { loadMyClub(); }, 500);
+    setTimeout(function() { rcLoadMyClub(); }, 500);
   }
 }
 
@@ -5289,6 +5308,21 @@ async function rcScheduleEvent(clubId, eventName, eventDate, location, notes) {
   if (!res.error) showToast('Event scheduled: ' + eventName, 'gold');
 }
 
+function rcBuildAdminHTML() {
+  return '<div style="padding:1.5rem 1rem 4rem;max-width:520px;margin:0 auto;width:100%;box-sizing:border-box;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">' +
+      '<div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:.05em;color:var(--ink);">CREATE YOUR CLUB</div>' +
+      '<button onclick="rcAdminClose()" style="background:none;border:none;font-size:26px;color:var(--slate);cursor:pointer;padding:4px 8px;">&times;</button>' +
+    '</div>' +
+    '<p style="font-size:14px;color:var(--slate);margin-bottom:1.25rem;line-height:1.5;">Name your run club and pick a join code. Share the code with your crew so they can join.</p>' +
+    '<input class="rc-input" id="rcAdminName" type="text" placeholder="Club name (e.g. Bermuda Triangle)" style="margin-bottom:10px;">' +
+    '<input class="rc-input" id="rcAdminCode" type="text" placeholder="Join code (e.g. WIN)" style="text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;" oninput="this.value=this.value.toUpperCase()">' +
+    '<input class="rc-input" id="rcAdminCity" type="text" placeholder="City (optional)" style="margin-bottom:10px;">' +
+    '<input class="rc-input" id="rcAdminDesc" type="text" placeholder="Description (optional)" style="margin-bottom:16px;">' +
+    '<button class="rc-btn" onclick="rcAdminCreateClub()">Create Club</button>' +
+  '</div>';
+}
+
 function openRCAdminPanel() {
   var overlay = document.getElementById('rcAdminOverlay');
   if (!overlay) {
@@ -5296,7 +5330,7 @@ function openRCAdminPanel() {
     overlay = document.createElement('div');
     overlay.id = 'rcAdminOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:600;background:var(--paper);overflow-y:auto;-webkit-overflow-scrolling:touch;';
-    overlay.innerHTML = rcBuildCycleHTML();
+    overlay.innerHTML = rcBuildAdminHTML();
   document.body.appendChild(overlay);
   } else {
     overlay.style.display = 'block';
@@ -5309,7 +5343,7 @@ function rcAdminCreateClub() {
   var city = document.getElementById('rcAdminCity').value.trim();
   var desc = document.getElementById('rcAdminDesc').value.trim();
   if (!name || !code) { showToast('Club name and join code required', 'error'); return; }
-  if (code.length < 4) { showToast('Join code must be at least 4 characters', 'error'); return; }
+  if (code.length < 3) { showToast('Join code must be at least 3 characters', 'error'); return; }
   rcCreateClub(name, code, city, desc);
   var ov = document.getElementById('rcAdminOverlay');
   if (ov) ov.remove();
