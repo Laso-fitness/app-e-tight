@@ -1687,8 +1687,16 @@ window._aetDB = (function() {
         ilike: function(c, v) { _filters.push(c + '=ilike.' + encodeURIComponent(v)); return q; },
         order: function(c, o) { _ord = c + ((o && o.ascending === false) ? '.desc' : '.asc'); return q; },
         limit: function(n) { _lim = n; return q; },
-        single: function() { _sngl = true; return q; },
-        maybeSingle: function() { _sngl = false; return q; },
+        single: function() { _sngl = true; return go('GET'); },
+        maybeSingle: function() {
+          _sngl = false;
+          return go('GET').then(function(res){
+            if (res.error) return res;
+            var d = res.data;
+            if (Array.isArray(d)) d = d.length ? d[0] : null;
+            return { data: d, error: null };
+          });
+        },
         insert: function(d) { return go('POST', d, { 'Prefer': 'return=representation' }); },
         upsert: function(d, o) {
           var pref = 'resolution=merge-duplicates,return=representation';
@@ -4760,14 +4768,15 @@ async function joinClubByCode() {
     return;
   }
   try {
-    var res = await supabase.from('run_clubs').select('*').eq('join_code', code).maybeSingle();
+    var res = await supabase.from('run_clubs').select('id,name,join_code').eq('join_code', code).maybeSingle();
     if (res.error) { rcMsg('Lookup failed: ' + res.error.message, true); return; }
-    if (!res.data) { rcMsg('No club found with code ' + code + '. Check with your coach.', true); return; }
+    if (!res.data || !res.data.id) { rcMsg('No club found with code ' + code + '. Check with your coach.', true); return; }
     await joinClub(res.data.id);
   } catch(e) { rcMsg('Error: ' + e.message, true); }
 }
 
 async function joinClub(clubId) {
+  if (!clubId) { rcMsg('Could not resolve that club — refresh the app and try again.', true); return; }
   if (!supabase || !aetCurrentUser) {
     rcMsg('Please sign in first — opening sign-in…', true);
     if (typeof showAetAuthScreen === 'function') setTimeout(showAetAuthScreen, 900);
