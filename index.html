@@ -4187,7 +4187,8 @@ async function loadBmrFromCloud() {
     var res = await supabase.from('bmr_settings')
       .select('*').eq('user_id', aetCurrentUser.id).maybeSingle();
     if (res.data) {
-      var d = res.data;
+      var d = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (!d) return;
       var wEl = document.getElementById('bmrWeight');
       var hEl = document.getElementById('bmrHeight');
       var aEl = document.getElementById('bmrAge');
@@ -4563,6 +4564,12 @@ function hideAetGate() {
 }
 
 function unlockApp() {
+  // Require the user to be signed in — blocks anonymous bypass
+  if (!aetCurrentUser) {
+    showToast('Please sign in first to verify your subscription.', 'error');
+    showAetAuthScreen();
+    return;
+  }
   var gate = document.getElementById('aetGate');
   if (gate) gate.style.display = 'none';
   localStorage.setItem('aetUnlocked', '1');
@@ -4692,11 +4699,12 @@ async function rcLoadMyClub() {
       .order('joined_at', {ascending: false})
       .limit(1)
       .maybeSingle();
-    if (mem.data && mem.data.run_clubs) {
-      rcState.myClub = mem.data.run_clubs;
-      rcState.myMembership = mem.data;
-      rcRenderMyClub(mem.data.run_clubs, true);
-      rcUpdateDashCard(mem.data.run_clubs);
+    var memRow = mem.data && (Array.isArray(mem.data) ? mem.data[0] : mem.data);
+    if (memRow && memRow.run_clubs) {
+      rcState.myClub = memRow.run_clubs;
+      rcState.myMembership = memRow;
+      rcRenderMyClub(memRow.run_clubs, true);
+      rcUpdateDashCard(memRow.run_clubs);
     }
   } catch(e) { console.warn('RC load club error:', e); }
 }
@@ -4706,8 +4714,9 @@ async function rcLoadLasoClub() {
   try {
     var res = await supabase.from('run_clubs')
       .select('*').eq('join_code','LASO01').maybeSingle();
-    if (res.data) {
-      document.getElementById('rcLasoClub').innerHTML = rcClubCardHTML(res.data, rcState.myClub && rcState.myClub.id === res.data.id);
+    var lasoClub = res.data && (Array.isArray(res.data) ? res.data[0] : res.data);
+    if (lasoClub) {
+      document.getElementById('rcLasoClub').innerHTML = rcClubCardHTML(lasoClub, rcState.myClub && rcState.myClub.id === lasoClub.id);
     }
   } catch(e) {}
 }
@@ -4831,10 +4840,8 @@ async function startCheckIn(clubId) {
     // Find or create today's event
     var evRes = await supabase.from('club_events')
       .select('*').eq('club_id', clubId).eq('event_date', today).maybeSingle();
-    var event;
-    if (evRes.data) {
-      event = evRes.data;
-    } else {
+    var event = evRes.data && (Array.isArray(evRes.data) ? evRes.data[0] : evRes.data);
+    if (!event) {
       var newEv = await supabase.from('club_events').insert({
         club_id: clubId,
         name: 'Run · ' + new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),
@@ -5596,8 +5603,8 @@ function rcBuildCycleHTML() {
   H += '<div style=' + q + 'background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:16px;' + q + '>';
   H += '<p style=' + q + 'font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--slate-light);margin-bottom:12px;' + q + '>Period tracking</p>';
   H += '<div style=' + q + 'display:grid;grid-template-columns:1fr 1fr;gap:10px;' + q + '>';
-  H += '<button onclick=' + q + 'cycleStartPeriod()' + q + ' style=' + q + 'padding:14px;background:#E24B4A;border:none;border-radius:10px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:DM Sans,sans-serif;' + q + '>🔴 Period started</button>';
-  H += '<button onclick=' + q + 'cycleEndPeriod()' + q + ' style=' + q + 'padding:14px;background:var(--paper2);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;font-family:DM Sans,sans-serif;' + q + '>⚪ Period ended</button>';
+  H += '<button onclick=' + q + 'cycleStartPeriod()' + q + ' style=' + q + 'padding:14px;background:#E24B4A;border:none;border-radius:10px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:DM Sans,sans-serif;' + (cycleState.isTracking ? 'opacity:0.4;pointer-events:none;' : '') + q + '>🔴 Period started</button>';
+  H += '<button onclick=' + q + 'cycleEndPeriod()' + q + ' style=' + q + 'padding:14px;background:var(--paper2);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;font-family:DM Sans,sans-serif;' + (!cycleState.isTracking ? 'opacity:0.4;pointer-events:none;' : '') + q + '>⚪ Period ended</button>';
   H += '</div><p style=' + q + 'font-size:11px;color:var(--slate-light);text-align:center;margin-top:8px;' + q + ' id=' + q + 'cycleLastLog' + q + '>Tap "Period started" on day 1</p></div>';
   H += '<div style=' + q + 'background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:16px;' + q + '>';
   H += '<p style=' + q + 'font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--slate-light);margin-bottom:12px;' + q + '>Today&#39;s symptoms (optional)</p>';
@@ -5675,9 +5682,27 @@ async function cycleStartPeriod() {
 
 async function cycleEndPeriod() {
   var sb = supabase || window._aetDB;
-  if (!sb || !aetCurrentUser || !cycleState.periodStart) {
-    showToast('Log period start first', 'error'); return;
+  if (!sb || !aetCurrentUser) { showToast('Log period start first', 'error'); return; }
+
+  // If periodStart not in memory, check DB for an active (unended) period
+  if (!cycleState.periodStart) {
+    try {
+      var chk = await sb.from('fasting_logs')
+        .select('id, started_at')
+        .eq('user_id', aetCurrentUser.id)
+        .eq('phase', 'cycle_start')
+        .is('ended_at', null)
+        .order('started_at', {ascending: false})
+        .limit(1);
+      if (chk.data && chk.data.length > 0) {
+        cycleState.periodStart = new Date(chk.data[0].started_at);
+      } else {
+        showToast('No active period found — log period start first', 'error');
+        return;
+      }
+    } catch(e) { showToast('Log period start first', 'error'); return; }
   }
+
   cycleState.isTracking = false;
   var durationMin = Math.round((new Date() - cycleState.periodStart) / 60000);
   try {
@@ -5827,6 +5852,34 @@ function showSuccessToast(msg, isError) {
 
 /* ===== SUPABASE FOOD PHOTO STORAGE ===== */
 // Instructions: In Supabase Dashboard → Storage → New bucket → name: "food-photos" → Public: OFF
+async function handleProgressPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  var iconEl  = document.getElementById('progressPhotoIcon');
+  var labelEl = document.getElementById('progressPhotoLabel');
+  if (iconEl)  iconEl.textContent  = '⏳';
+  if (labelEl) labelEl.textContent = 'Uploading...';
+
+  try {
+    // _aetDB has no .storage implementation — use the real Supabase SDK client if available
+    var sb = (window._realSupabaseClient && window._realSupabaseClient.storage) ? window._realSupabaseClient : supabase;
+    if (!sb || !sb.storage || !aetCurrentUser) throw new Error('Storage not available or not signed in');
+    var ext  = file.name.split('.').pop() || 'jpg';
+    var path = 'progress/' + aetCurrentUser.id + '/' + Date.now() + '.' + ext;
+    var result = await sb.storage.from('food-photos').upload(path, file, {
+      cacheControl: '3600', upsert: false
+    });
+    if (result.error) throw result.error;
+    if (iconEl)  iconEl.textContent  = '✅';
+    if (labelEl) labelEl.textContent = 'Photo saved privately ✓';
+    showToast('Progress photo saved ✓', 'gold');
+  } catch(e) {
+    console.warn('Photo upload error:', e);
+    if (iconEl)  iconEl.textContent  = '📸';
+    if (labelEl) labelEl.textContent = 'Photo save failed — tap to retry';
+    showToast('Photo could not be saved. Check storage bucket.', 'error');
+  }
+}
 async function uploadFoodPhoto(file) {
   if (!supabase || !aetCurrentUser) return null;
   try {
@@ -6753,10 +6806,33 @@ function buildLogForm(type) {
         <div class="log-field"><label>Thigh</label><input class="log-input" id="lf_thigh" type="number" step="0.1" placeholder="24.0" inputmode="decimal"></div>
       </div>
       <div class="log-field"><label>Progress photo (optional)</label>
-        <div class="log-photo-zone" onclick="alert('Photo capture available in mobile app version. Stored locally — never shared.')">
-          <div style="font-size:24px;margin-bottom:4px;">📸</div>
-          <p style="font-size:12px;">Front · Side · Back · Stored privately</p>
+        <div class="log-photo-zone" onclick="document.getElementById('progressPhotoInput').click()" id="progressPhotoZone">
+          <input type="file" id="progressPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="handleProgressPhoto(this)">
+          <div style="font-size:24px;margin-bottom:4px;" id="progressPhotoIcon">📸</div>
+          <p style="font-size:12px;" id="progressPhotoLabel">Tap to take photo · Stored privately</p>
         </div>
+      </div>`;
+  }
+  if (type === 'supplements') {
+    return `
+      <div class="log-field"><label>Supplement name</label>
+        <input class="log-input" id="lf_suppname" placeholder="e.g. Creatine, Vitamin D, Protein powder">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="log-field"><label>Dose</label>
+          <input class="log-input" id="lf_suppdose" placeholder="e.g. 5g, 2000IU, 1 scoop">
+        </div>
+        <div class="log-field"><label>Timing</label>
+          <div class="log-pill-row" data-field="supptiming" data-single="1">
+            <div class="log-pill active" onclick="setPill(this,'Morning')" data-val="Morning">Morning</div>
+            <div class="log-pill" onclick="setPill(this,'Pre-workout')" data-val="Pre-workout">Pre-workout</div>
+            <div class="log-pill" onclick="setPill(this,'Post-workout')" data-val="Post-workout">Post-workout</div>
+            <div class="log-pill" onclick="setPill(this,'Evening')" data-val="Evening">Evening</div>
+          </div>
+        </div>
+      </div>
+      <div class="log-field"><label>Notes (optional)</label>
+        <textarea class="log-textarea" id="lf_suppnotes" placeholder="Brand, reason for taking, how you feel..."></textarea>
       </div>`;
   }
   if (type === 'wearable') {
@@ -7287,7 +7363,7 @@ function startBarcodeScan() {
   if (typeof Html5Qrcode === 'undefined') {
     var qrScript = document.createElement('script');
     qrScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
-    qrScript.onload = function() { startBarcodeScanner(); };
+    qrScript.onload = function() { startBarcodeScan(); };
     qrScript.onerror = function() { alert('Barcode scanner library failed to load. Please check your connection.'); };
     document.head.appendChild(qrScript);
     return;
@@ -7307,6 +7383,8 @@ function startBarcodeScan() {
   statusEl.textContent = 'Requesting camera access...';
   statusEl.style.color = 'var(--slate)';
 
+  // Delay 150ms so the modal fully renders before Html5Qrcode mounts the video
+  setTimeout(function() {
   barcodeScanner = new Html5Qrcode('barcodeScannerRegion');
   const config = {
     fps: 10,
@@ -7345,6 +7423,7 @@ function startBarcodeScan() {
     statusEl.textContent = msg;
     statusEl.style.color = '#A32D2D';
   });
+  }, 150); // end setTimeout — let modal render before mounting camera
 }
 
 function stopBarcodeScan() {
