@@ -4141,8 +4141,7 @@ async function autoCreateProfile(user) {
       id: user.id,
       email: user.email,
       full_name: name,
-      subscription_tier: 'trial',
-      trial_start: new Date().toISOString()
+      subscription_tier: 'free',
     }, {onConflict: 'id'});
   } catch(e) { console.warn('Profile create:', e); }
 }
@@ -4495,49 +4494,30 @@ function waitForSupabaseAndInit() {
   }
 }
 
-/* ===== APP-E-TIGHT TRIAL SYSTEM ===== */
+/* ===== APP-E-TIGHT ACCESS — FREE FOR ALL UNTIL FURTHER NOTICE ===== */
 
-// Free tabs - always accessible
-var AET_FREE_TABS = ['bmr', 'laso', 'infinite'];
-// Gated tabs - require subscription or active trial
-var AET_GATED_TABS = ['dashboard', 'log', 'progress', 'mission', 'mindbody', 'longevity', 'nutrition'];
-var TRIAL_DAYS = 7;
+var AET_FREE_TABS = ['bmr', 'laso', 'infinite', 'dashboard', 'log', 'progress', 'mission', 'mindbody', 'longevity', 'nutrition'];
+var AET_GATED_TABS = [];
+var TRIAL_DAYS = 0;
 
 function aetGetState() {
-  try {
-    var subscribed  = localStorage.getItem('aetUnlocked') === '1';
-    var trialStart  = localStorage.getItem('aetTrialStart');
-    var dismissed   = localStorage.getItem('aetGateDismissed') === '1';
-    if (!trialStart) {
-      trialStart = Date.now().toString();
-      localStorage.setItem('aetTrialStart', trialStart);
-    }
-    var daysUsed    = (Date.now() - parseInt(trialStart)) / (1000 * 60 * 60 * 24);
-    var daysLeft    = Math.max(0, Math.ceil(TRIAL_DAYS - daysUsed));
-    var trialActive = daysLeft > 0;
-    var trialExpired = !trialActive && !subscribed;
-    return { subscribed, trialActive, trialExpired, daysLeft, dismissed };
-  } catch(e) {
-    return { subscribed: false, trialActive: true, trialExpired: false, daysLeft: 7, dismissed: false };
-  }
+  return { subscribed: true, trialActive: false, trialExpired: false, daysLeft: 0, dismissed: true };
 }
 
 function aetInitBanner() {
-  var s = aetGetState();
   var banner = document.getElementById('aetTrialBanner');
-  var daysEl = document.getElementById('aetTrialDaysLeft');
-  if (!banner) return;
-  if (s.subscribed) {
-    banner.style.display = 'none';
-    return;
-  }
-  if (s.trialActive) {
-    banner.style.display = 'flex';
-    if (daysEl) daysEl.textContent = s.daysLeft + ' day' + (s.daysLeft === 1 ? '' : 's') + ' left in your free trial';
-  } else {
-    banner.style.display = 'flex';
-    if (daysEl) daysEl.textContent = 'Your free trial has ended';
-  }
+  if (banner) banner.style.display = 'none';
+}
+
+function checkGatedTab(tabKey) { return true; }
+function checkAetGate() {
+  var gate = document.getElementById('aetGate');
+  if (gate) gate.style.display = 'none';
+}
+
+function aetInitBanner() {
+  var banner = document.getElementById('aetTrialBanner');
+  if (banner) banner.style.display = 'none'; // Trials suspended
 }
 
 function checkGatedTab(tabKey) {
