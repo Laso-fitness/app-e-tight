@@ -30,4 +30,4 @@ export default async function handler(req){
   return json({ok:true,estimate});
  }catch(e){return json({ok:false,code:e?.name==='TimeoutError'?'timeout':'service_unavailable'},503);}
 }
-export const config={path:'/api/nutrition-estimate',rateLimit:{action:'rate_limit',aggregateBy:'ip',windowSize:3600,windowLimit:12}};
+export const config={path:'/api/nutrition-estimate',rateLimit:{action:'rate_limit',aggregateBy:['ip','domain'],windowSize:180,windowLimit:6}};
