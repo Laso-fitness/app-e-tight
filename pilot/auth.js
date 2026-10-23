@@ -35,5 +35,13 @@ function create({config,store,crypto,location,history,raw}){
  }
  return {beginGoogle,consumeCallback,callback};
 }
-root.AppETightAuth={create};if(typeof module!=='undefined')module.exports={create};
+async function restoreSession({read,verify,remember,onError}){
+ let saved;
+ try{const text=read();if(!text)return;saved=JSON.parse(text);if(!saved?.access_token||!saved?.refresh_token||!saved?.user?.id)throw Error('Invalid saved session');}
+ catch(e){remember(null);onError('Sign in again to reconnect your saved journal.');return;}
+ remember(saved);
+ try{const user=await verify();if(!user?.id){const e=Error('Invalid account');e.status=401;throw e;}}
+ catch(e){if(e.status===400||e.status===401){remember(null);onError('Sign in again to reconnect your saved journal.');}else{onError('Could not reconnect yet. Your saved sign-in is retained. Check your connection and retry.');}}
+}
+root.AppETightAuth={create,restoreSession};if(typeof module!=='undefined')module.exports={create,restoreSession};
 })(typeof window!=='undefined'?window:globalThis);
