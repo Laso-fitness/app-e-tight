@@ -5,13 +5,14 @@ function normalize(value){
  const items=value.items.slice(0,20).map(item=>{
   const row={name:String(item.name||'').slice(0,80),portion:String(item.portion||'').slice(0,80)};
   if(!row.name)throw Error('The estimate was incomplete. Please enter the meal manually.');
-  for(const key of fields){const n=item[key];if(typeof n!=='number'||!Number.isFinite(n)||n<0||n>(key==='calories'?5000:500))throw Error('The estimate contained invalid amounts. Please enter the meal manually.');row[key]=n;}
+  for(const key of fields){const n=item[key];if(n===null){row[key]=null;continue;}if(typeof n!=='number'||!Number.isFinite(n)||n<0||n>(key==='calories'?5000:500))throw Error('The estimate contained invalid amounts. Please enter the meal manually.');row[key]=n;}
   return row;
  });
- const totals=Object.fromEntries(fields.map(k=>[k,Math.round(items.reduce((n,i)=>n+i[k],0)*10)/10]));
+ const totals=Object.fromEntries(fields.map(k=>[k,items.some(i=>i[k]===null)?null:Math.round(items.reduce((n,i)=>n+i[k],0)*10)/10]));
  if(totals.calories>10000||fields.slice(1).some(k=>totals[k]>1000))throw Error('The estimated portion is too large. Enter a smaller portion manually.');
- return {items,totals,meal_title:String(value.meal_title||'Photo meal').slice(0,120),notes:String(value.notes||'').slice(0,400),confidence:['low','medium','high'].includes(value.confidence)?value.confidence:'low',is_food:true};
+ return {items,totals,meal_title:String(value.meal_title||'Photo meal').slice(0,120),notes:String(value.notes||'').slice(0,400),source:['label','barcode'].includes(value.source)?value.source:'photo',confidence:['low','medium','high'].includes(value.confidence)?value.confidence:'low',is_food:true};
 }
-function message(code){return ({ai_not_configured:'Automatic estimates need the AI connection enabled. You can enter label amounts or save the photo without nutrition amounts.',daily_limit:'The daily estimate limit has been reached. You can still save your photo and enter amounts.',auth_required:'Sign in again to estimate this meal.',timeout:'The estimate took too long. Your photo is still here; retry or enter amounts.',service_unavailable:'The estimate service is unavailable. Your photo can still be saved.'})[code]||'Could not estimate this photo. Retry or save it with your own description and amounts.';}
-root.NutritionPhoto={normalize,message};if(typeof module!=='undefined')module.exports=root.NutritionPhoto;
+function message(code){return ({ai_not_configured:'Automatic estimates need the AI connection enabled. You can enter label amounts or save the photo without nutrition amounts.',daily_limit:'The scan limit has been reached. Wait a few minutes before retrying, or enter amounts without another scan.',invalid_estimate:'The food or label could not be read reliably. Take a clearer photo or enter the amounts.',auth_required:'Sign in again to estimate this meal.',timeout:'The estimate took too long. Your photo is still here; retry or enter amounts.',service_unavailable:'The estimate service is unavailable. Your photo can still be saved.'})[code]||'Could not estimate this photo. Retry or save it with your own description and amounts.';}
+function scale(value,multiplier){const m=Number(multiplier);if(!Number.isFinite(m)||m<=0||m>20)throw Error('Enter a portion between 0 and 20.');return normalize({...value,items:value.items.map(i=>({...i,portion:i.portion+' × '+m,...Object.fromEntries(fields.map(k=>[k,i[k]===null?null:Math.round(i[k]*m*100)/100]))}))});}
+root.NutritionPhoto={normalize,message,scale};if(typeof module!=='undefined')module.exports=root.NutritionPhoto;
 })(typeof window==='undefined'?globalThis:window);
