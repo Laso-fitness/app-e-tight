@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "openai": "7.45.1"
+  },
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test tests/*.test.*"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
