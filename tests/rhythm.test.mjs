@@ -37,6 +37,15 @@ test('Does not use future appetite reports or schedule stale reminders',()=>{
  assert.equal(hungerForecast(meals,reports,new Date('2026-11-05T18:00:00Z')).ready,false);
 });
 
+test('Two explicit reports of not being hungry pause the automatic hypothesis',()=>{
+ const meals=[],hungryReports=[];
+ for(let i=1;i<=5;i++){const d='2026-11-0'+i;meals.push(meal('history'+i,d+'T09:00:00Z'));hungryReports.push(hungry(d+'T12:00:00Z'))}
+ meals.push(meal('newest','2026-11-06T09:00:00Z'));
+ const feedback=[1,2].map(i=>({response:'not_yet',observed_at:'2026-11-0'+i+'T12:05:00Z',predicted_for:'2026-11-0'+i+'T12:00:00Z'}));
+ const x=hungerForecast(meals,hungryReports,new Date('2026-11-06T10:00:00Z'),feedback);
+ assert.equal(x.ready,false);assert.equal(x.conflicting_feedback,true);
+});
+
 test('Cannot play cue with insufficient forecast or during quiet hours',()=>{
  assert.equal(withinCueWindow({ready:false,predicted_at:'2026-11-07T16:00:00Z'},new Date('2026-11-07T16:00:00Z')),false);
  const date=new Date(2026,10,7,8,55);
