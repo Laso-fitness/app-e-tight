@@ -63,7 +63,7 @@ function create({api,getSession}){
    setVisibility();
    if(settings?.hunger_forecast_enabled){
      const hungerFromResponses=reports.filter(r=>r.response==='hungry').map(r=>({event_type:'checkin',recorded_at:r.observed_at,hunger:8}));
-     forecast=model.hungerForecast(meals,[...checkins,...hungerFromResponses]);
+     forecast=model.hungerForecast(meals,[...checkins,...hungerFromResponses],new Date(),reports);
      if(forecast.ready){
        const approx=new Date(forecast.predicted_at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
        output('rhythmHungerForecast','Your logged patterns suggest hunger may return around '+approx+' (very approximate, ±'+forecast.uncertainty_minutes+' minutes). Based on '+forecast.paired_observations+' prior meal-to-hunger intervals. This is a hypothesis, never a reason to delay food.');
