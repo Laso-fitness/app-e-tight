@@ -4,8 +4,8 @@
 const minutes=ms=>ms/60000;
 const median=a=>{const x=[...a].sort((p,q)=>p-q);return x.length?(x.length%2?x[(x.length-1)/2]:(x[x.length/2-1]+x[x.length/2])/2):null};
 function hungerForecast(mealRows,hungerRows,now=new Date()){
- const meals=(mealRows||[]).filter(m=>m.entry_type==='meal'&&Number.isFinite(Date.parse(m.logged_at))).sort((a,b)=>Date.parse(a.logged_at)-Date.parse(b.logged_at));
- const reports=(hungerRows||[]).filter(e=>e.event_type==='checkin'&&Number(e.hunger)>=6&&Number.isFinite(Date.parse(e.recorded_at))).sort((a,b)=>Date.parse(a.recorded_at)-Date.parse(b.recorded_at));
+ const meals=(mealRows||[]).filter(m=>m.entry_type==='meal'&&Number.isFinite(Date.parse(m.logged_at))&&Date.parse(m.logged_at)<=now.getTime()).sort((a,b)=>Date.parse(a.logged_at)-Date.parse(b.logged_at));
+ const reports=(hungerRows||[]).filter(e=>e.event_type==='checkin'&&Number(e.hunger)>=6&&Number.isFinite(Date.parse(e.recorded_at))&&Date.parse(e.recorded_at)<=now.getTime()).sort((a,b)=>Date.parse(a.recorded_at)-Date.parse(b.recorded_at));
  const pairs=new Map();
  for(const e of reports){
    const at=Date.parse(e.recorded_at);
@@ -27,7 +27,8 @@ function hungerForecast(mealRows,hungerRows,now=new Date()){
  const last=meals[meals.length-1],mealTime=Date.parse(last.logged_at),today=now.getTime();
  if(!Number.isFinite(mealTime)||mealTime>today||today-mealTime>12*3600000)return {...insufficient,ready:false,needed:'No recent logged meal to anchor a forecast. We will not guess.'};
  const suggestedAt=new Date(mealTime+center*60000);
- return {ready:true,paired_observations:vals.length,distinct_days:days.size,central_minutes:Math.round(center),uncertainty_minutes:Math.max(45,Math.round(deviation*2)),predicted_at:suggestedAt.toISOString(),last_meal_at:last.logged_at,method:'observed interval from logged meal to voluntarily reported hunger ≥6/10, with median absolute deviation; hypothesis only'};
+ if(suggestedAt.getTime()<today-30*60000)return {...insufficient,needed:'That observed hunger window has passed. We will not play a late cue or imply you missed a meal.'};
+ return {ready:true,paired_observations:vals.length,distinct_days:days.size,central_minutes:Math.round(center),uncertainty_minutes:Math.max(60,Math.round(deviation*2)),predicted_at:suggestedAt.toISOString(),last_meal_at:last.logged_at,method:'observed interval from logged meal to voluntarily reported hunger ≥6/10, with median absolute deviation; hypothesis only'};
 }
 function digestivePattern(rows){
  const entries=(rows||[]).filter(e=>Number.isFinite(Date.parse(e.happened_at))).sort((a,b)=>Date.parse(a.happened_at)-Date.parse(b.happened_at));
