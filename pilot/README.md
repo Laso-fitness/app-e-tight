@@ -25,3 +25,12 @@ Physical iPhone/Android testing and actual delivery of a new user's confirmation
 ## Limits
 
 Photo capture works; automatic food recognition is not wired into this release. Existing backend analysis code has not been verified with a configured AI provider. Text alerts require an SMS integration. Restaurant discovery, wearable detection, recovery scoring and legacy trial-session linkage are not in the pilot. Missing logs do not imply missed meals. New-client paid coaching capacity is 15; program terms remain in private coach settings.
+
+
+## Opt-in Behavioral Context & Personal Rhythms (November 7, 2026)
+- Users may enable voluntary check-ins, owner-only descriptive patterns, optional app-only foreground time and user-rated suggestion helpfulness. They may record an optional later action, general context, self-reported rest/movement/phone activity, and explicitly link one of their own meal records. None of this is phone-wide tracking.
+- Separate **Hunger Forecast** setting: the browser examines prior logged meals and reported hunger only after consent. Once at least five usable personal meal-to-hunger pairs exist across three days and timing is not overly variable, it can present an approximate appetite window. **Not** a recommendation about when to eat.
+- Separate **Stomach Growl** setting: opt-in gentle local synthesizer sound while the app remains foregrounded, audio is enabled by user interaction, and the individual forecast becomes due. No sound in quiet hours 20:00–09:00; no more than once per local day. Background notifications and native custom sounds are **not** implemented.
+- Separate **Digestive Rhythm** setting: users can voluntarily record bowel movements with optional Bristol form. After sufficient logs, the page may show a broad, observed local-time window. No calculated GI transit times, age-derived predictions, or medical inference.
+- A user can export and erase these records; deletion revokes the corresponding recording permission first. The underlying meal journal stays intact. Tables use owner-only row-level security with consent-gated inserts.
+- All prediction/medical claims remain unvalidated. The first real-user iPhone/iPad end-to-end smoke test is pending. See BEHAVIOR_CONTEXT_RESEARCH.md and tests/rhythm.test.mjs.
