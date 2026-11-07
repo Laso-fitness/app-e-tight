@@ -135,7 +135,8 @@ function create({api,getSession,toast}){
    await api('/rest/v1/nutrition_behavior_events?id=eq.'+encodeURIComponent(id)+'&user_id=eq.'+encodeURIComponent(validOwner()),{
     method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({suggestion_helpful:value})
    });
-   lastCheckinId=null;$('behaviorFeedback').hidden=true;
+   $('behaviorFeedback').hidden=true;
+   $('behaviorOutcomePanel').hidden=false;
    detail('Feedback saved. Your choices help us learn whether suggestions are genuinely useful.');
   }catch(e){detail('Could not save feedback: '+e.message)}
  }
