@@ -3,7 +3,7 @@
 'use strict';
 const minutes=ms=>ms/60000;
 const median=a=>{const x=[...a].sort((p,q)=>p-q);return x.length?(x.length%2?x[(x.length-1)/2]:(x[x.length/2-1]+x[x.length/2])/2):null};
-function hungerForecast(mealRows,hungerRows,now=new Date()){
+function hungerForecast(mealRows,hungerRows,now=new Date(),feedbackRows=[]){
  const meals=(mealRows||[]).filter(m=>m.entry_type==='meal'&&Number.isFinite(Date.parse(m.logged_at))&&Date.parse(m.logged_at)<=now.getTime()).sort((a,b)=>Date.parse(a.logged_at)-Date.parse(b.logged_at));
  const reports=(hungerRows||[]).filter(e=>e.event_type==='checkin'&&Number(e.hunger)>=6&&Number.isFinite(Date.parse(e.recorded_at))&&Date.parse(e.recorded_at)<=now.getTime()).sort((a,b)=>Date.parse(a.recorded_at)-Date.parse(b.recorded_at));
  const pairs=new Map();
@@ -19,6 +19,8 @@ function hungerForecast(mealRows,hungerRows,now=new Date()){
  const days=new Set(vals.map(x=>new Date(x.at).toISOString().slice(0,10)));
  const insufficient={ready:false,paired_observations:vals.length,distinct_days:days.size,needed:'At least 5 voluntary high-hunger reports linked by time to prior meals across 3 days. Not necessarily a clinical appetite measure.'};
  if(vals.length<5||days.size<3||!meals.length)return insufficient;
+ const misses=(feedbackRows||[]).filter(r=>r.response==='not_yet'&&r.predicted_for&&Number.isFinite(Date.parse(r.predicted_for))&&Number.isFinite(Date.parse(r.observed_at))&&Date.parse(r.observed_at)<=now.getTime()&&Math.abs(Date.parse(r.observed_at)-Date.parse(r.predicted_for))<=120*60000);
+ if(misses.length>=2)return {...insufficient,needed:'Recent “not hungry” responses show this timing hypothesis may be inaccurate. Sound cues are paused while we collect more voluntary observations.',conflicting_feedback:true};
  const intervals=vals.map(x=>x.delay);
  const center=median(intervals);
  const deviation=median(intervals.map(x=>Math.abs(x-center)));
