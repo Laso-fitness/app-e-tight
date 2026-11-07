@@ -7,7 +7,7 @@ function create({api,getSession,toast}){
  if(!pane)return {sessionChanged(){},refresh:async()=>{}};
  const status=$('behaviorStatus'),checkins=$('behaviorCheckins'),usage=$('behaviorAppUsage');
  const form=$('behaviorForm'),insights=$('behaviorInsights'),history=$('behaviorHistory');
- let settings=null,events=[],owner=null,epoch=0,observingStart=null,busy=false;
+ let settings=null,events=[],owner=null,epoch=0,observingStart=null,busy=false,lastCheckinId=null;
  const detail=msg=>{status.textContent=msg};
  const validOwner=()=>getSession()?.user?.id||null;
  const now=()=>performance.now();
@@ -23,7 +23,7 @@ function create({api,getSession,toast}){
    catch{detail('Could not store optional in-app time. No other phone activity is being monitored.')}
  }
  function sessionChanged(){
-   epoch++;settings=null;events=[];owner=validOwner();observingStart=null;
+   epoch++;settings=null;events=[];owner=validOwner();observingStart=null;lastCheckinId=null;$('behaviorFeedback').hidden=true;
    checkins.checked=false;usage.checked=false;form.hidden=true;insights.replaceChildren();history.replaceChildren();
    pane.hidden=!owner;if(owner)refresh();
  }
@@ -93,7 +93,9 @@ function create({api,getSession,toast}){
    if(!settings?.checkins_enabled)throw Error('Turn on check-ins first.');const uid=validOwner();if(!uid)throw Error('Sign in.');
    const payload={user_id:uid,event_type:'checkin',hunger:asInt('behaviorHunger'),craving:asInt('behaviorCraving'),mood:$('behaviorMood').value,context:$('behaviorContext').value,trigger:$('behaviorTrigger').value,action:$('behaviorAction').value,source:'user_checkin'};
    busy=true;$('behaviorSaveCheckin').disabled=true;
-   await api('/rest/v1/nutrition_behavior_events',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+   const saved=await api('/rest/v1/nutrition_behavior_events',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)});
+   lastCheckinId=saved?.[0]?.id||null;
+   $('behaviorFeedback').hidden=!lastCheckinId;
    const advice=followUps[payload.trigger]||'Noticing the context is useful. You can choose a response that feels supportive.';
    $('behaviorSuggestion').textContent=advice+' This is not medical advice, and no food choices are labeled good or bad.';
    detail('Check-in saved. Thanks for sharing what was happening.');await refresh();
@@ -101,6 +103,19 @@ function create({api,getSession,toast}){
   finally{busy=false;$('behaviorSaveCheckin').disabled=false}
  });
  $('behaviorSaveSettings').addEventListener('click',updateSettings);
+ async function feedback(value){
+  if(!lastCheckinId||!validOwner()||!settings?.checkins_enabled)return;
+  const id=lastCheckinId;
+  try{
+   await api('/rest/v1/nutrition_behavior_events?id=eq.'+encodeURIComponent(id)+'&user_id=eq.'+encodeURIComponent(validOwner()),{
+    method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({suggestion_helpful:value})
+   });
+   lastCheckinId=null;$('behaviorFeedback').hidden=true;
+   detail('Feedback saved. Your choices help us learn whether suggestions are genuinely useful.');
+  }catch(e){detail('Could not save feedback: '+e.message)}
+ }
+ $('behaviorHelpful').addEventListener('click',()=>feedback(true));
+ $('behaviorNotHelpful').addEventListener('click',()=>feedback(false));
  $('behaviorExport').addEventListener('click',async()=>{
   if(!validOwner()){detail('Sign in to export your own records.');return}
   const uid=validOwner();try{
