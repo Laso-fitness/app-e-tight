@@ -52,3 +52,20 @@ Status: live opt-in research instrument; predictive performance NOT validated.
 - Data protection tests: anonymous blocked, cross-user blocked, inserts without category consent blocked, deletion works and no associated diary entries removed.
 - Pilot app link: https://app-e-tight.netlify.app/pilot/
 - Linked private body engine: separate application with shared auth, not an automatic data source.
+
+
+## November 7, 2026: opt-in Hunger Forecast and Digestive Rhythm Tracker (deployed)
+The browser pilot now includes a separate Personal Rhythms panel. All three choices default OFF:
+- Use self-reported hunger observations and meal timestamps to create an **experimental hunger-window hypothesis**, never a meal prescription.
+- Optionally play a quiet synthesized stomach growl **only while the app is open/foregrounded, the browser audio session has been unlocked by a tap, and a validated personal forecast exists**. Quiet hours 8:00pm–9:00am; at most one sound per local date. No web push, native iOS scheduling, or background audio is promised.
+- Optionally record self-reported bowel movement times and optional Bristol stool form; show the common broad 4-hour window after sufficient reports. No exact bowel-movement prediction is displayed.
+
+The hunger estimator (pilot/rhythm-core.js) is deterministic and abstains until at least 5 user-reported high-hunger observations are paired with an earlier logged meal on 3 separate days; it refuses a timed cue if median absolute deviation exceeds 90 minutes. Data must be recent for a current cue. Forecasts display generous timing uncertainty and are explicitly not clinical advice.
+
+Users may answer Hungry / Not yet / Unsure. Choosing Not yet presents optional reasons (still full, unlogged meal, occupied, stress, reduced appetite, other, unsure). These are the user's explanations, not diagnoses. A recent-answer rate limit prevents excessive sampling. Both appetite and digestive records are protected by owner-only RLS, and insert requires the matching explicit settings. There are export and delete controls; delete revokes settings before deleting either set of records.
+
+Age and meal composition are candidates for **future validation as covariates**, not physiologically reliable clocks. The current meal journal has incomplete macros and there are no actual gut-transit measurements, so the model makes no food-specific digestion or aging-adjusted prediction. An immediate bowel movement after eating can reflect the gastrocolic reflex, not passage of that same meal.
+
+Independent sources: Cleveland Clinic gastrocolic reflex (https://my.clevelandclinic.org/health/body/gastrocolic-reflex); population bowel-habit variability (https://pubmed.ncbi.nlm.nih.gov/20205503/); iOS web-push limitations (https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers).
+
+Validation to perform with first consenting users: iPhone Safari on-device test for opt-in onboarding, local growl permissions, row-level isolation, saving meals, later prompted hunger responses, digest logging, exporting and deleting. Product should not advertise model performance before real-user acceptance.
