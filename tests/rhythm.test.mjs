@@ -13,9 +13,11 @@ test('No hunger prediction with no data',()=>{
 test('Requires at least five paired, personally reported examples over multiple days',()=>{
  const m=[],h=[];
  for(let day=1;day<=5;day++){const dt='2026-11-0'+day;m.push(meal('m'+day,dt+'T09:00:00Z'));h.push(hungry(dt+'T12:00:00Z'))}
- const pred=hungerForecast(m,h,new Date('2026-11-05T11:00:00Z'));
+ m.push(meal('newest','2026-11-06T09:00:00Z'));
+ const pred=hungerForecast(m,h,new Date('2026-11-06T11:00:00Z'));
+
  assert.equal(pred.ready,true);assert.equal(pred.central_minutes,180);assert.equal(pred.paired_observations,5);
- assert.equal(pred.predicted_at,'2026-11-05T12:00:00.000Z');
+ assert.equal(pred.predicted_at,'2026-11-06T12:00:00.000Z');
 });
 test('Does not predict when individual data are highly variable',()=>{
  const meals=[],hunger=[];
@@ -24,9 +26,17 @@ test('Does not predict when individual data are highly variable',()=>{
    meals.push(meal('m'+i,new Date(base).toISOString()));
    hunger.push(hungry(new Date(base+delta*60000).toISOString()));
  });
- const p=hungerForecast(meals,hunger,new Date('2026-11-05T15:00:00Z'));
+ meals.push(meal('latest','2026-11-06T09:00:00Z'));
+ const p=hungerForecast(meals,hunger,new Date('2026-11-06T10:00:00Z'));
  assert.equal(p.ready,false);assert.equal(p.variable,true);
 });
+test('Does not use future appetite reports or schedule stale reminders',()=>{
+ const meals=[],reports=[];
+ for(let i=1;i<=5;i++){const d='2026-11-0'+i;meals.push(meal('m'+i,d+'T09:00:00Z'));reports.push(hungry(d+'T12:00:00Z'))}
+ assert.equal(hungerForecast(meals,reports,new Date('2026-11-05T11:00:00Z')).ready,false);
+ assert.equal(hungerForecast(meals,reports,new Date('2026-11-05T18:00:00Z')).ready,false);
+});
+
 test('Cannot play cue with insufficient forecast or during quiet hours',()=>{
  assert.equal(withinCueWindow({ready:false,predicted_at:'2026-11-07T16:00:00Z'},new Date('2026-11-07T16:00:00Z')),false);
  const date=new Date(2026,10,7,8,55);
