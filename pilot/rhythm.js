@@ -117,6 +117,8 @@ function create({api,getSession}){
    if(busy||!current())return;busy=true;$('rhythmSaveSettings').disabled=true;
    const enabled=$(ids.hunger).checked,growl=enabled&&$(ids.sound).checked,digest=$(ids.digest).checked;
    try{
+     // iOS audio activation must happen directly in the user's tap gesture, before any network await.
+     if(growl){try{await armAudio()}catch{/* No sound if the browser refuses local audio. */}}
      // Saving choices never starts a phone-wide permission flow.
      const uid=current();
      await api('/rest/v1/nutrition_behavior_settings?on_conflict=user_id',{
@@ -124,7 +126,6 @@ function create({api,getSession}){
        body:JSON.stringify({user_id:uid,hunger_forecast_enabled:enabled,growl_enabled:growl,digestive_tracking_enabled:digest,updated_at:new Date().toISOString()})
      });
      settings={...settings,hunger_forecast_enabled:enabled,growl_enabled:growl,digestive_tracking_enabled:digest};
-     if(growl){try{await armAudio()}catch{/* Always tolerate browsers that block audio. */}}
      await refresh();
      status('Preferences saved. Automatic cues require enough verified observations and the app to remain open. No background tracking is active.');
    }catch(e){status('Settings were not saved: '+e.message);await refresh()}
@@ -177,6 +178,7 @@ function create({api,getSession}){
  }
  setInterval(()=>{checkGrowl();if(visible()&&settings?.hunger_forecast_enabled&&t()-lastRefresh>10*60000)refresh()},30000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkGrowl()});
+ window.addEventListener('appetight:checkin-saved',()=>{if(settings?.hunger_forecast_enabled)refresh()});
  $('rhythmExport').addEventListener('click',async()=>{
    if(!current())return;
    try{
