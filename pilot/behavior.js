@@ -101,6 +101,25 @@ function create({api,getSession,toast}){
   finally{busy=false;$('behaviorSaveCheckin').disabled=false}
  });
  $('behaviorSaveSettings').addEventListener('click',updateSettings);
+ $('behaviorExport').addEventListener('click',async()=>{
+  if(!validOwner()){detail('Sign in to export your own records.');return}
+  const uid=validOwner();try{
+   // Export all records with keyset pagination; do not expose this data to another service.
+   const rows=[];let offset=0;
+   while(true){
+    const batch=await api('/rest/v1/nutrition_behavior_events?select=*&user_id=eq.'+encodeURIComponent(uid)+'&order=recorded_at.desc&limit=500&offset='+offset);
+    rows.push(...batch);
+    if(batch.length<500)break;
+    offset+=batch.length;if(offset>20000)throw Error('Too many records to export in one file. Contact support.');
+   }
+   const payload={schema:'app-e-tight.behavior.v1',exported_at:new Date().toISOString(),settings:{checkins_enabled:!!settings?.checkins_enabled,app_usage_enabled:!!settings?.app_usage_enabled},records:rows};
+   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+   const url=URL.createObjectURL(blob),link=document.createElement('a');
+   link.href=url;link.download='app-e-tight-my-behavior-records-'+new Date().toISOString().slice(0,10)+'.json';
+   document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+   detail('Export prepared on your device. Treat the downloaded file as private.');
+  }catch(e){detail('Export failed: '+e.message)}
+ });
  $('behaviorDelete').addEventListener('click',async()=>{
   if(!validOwner())return;
   if(!window.confirm('Permanently delete all your App-E-Tight behavior check-ins and optional app-use records? Your meal journal and preferences will stay.'))return;
