@@ -182,11 +182,20 @@ function create({api,getSession,toast}){
  });
  $('behaviorDelete').addEventListener('click',async()=>{
   if(!validOwner())return;
-  if(!window.confirm('Permanently delete all your App-E-Tight behavior check-ins and optional app-use records? Your meal journal and preferences will stay.'))return;
+  if(!window.confirm('Turn off behavior tracking and permanently delete all check-ins and optional app-use records? Your meal journal and goals will stay.'))return;
   try{
-   const uid=validOwner();await api('/rest/v1/nutrition_behavior_events?user_id=eq.'+encodeURIComponent(uid),{method:'DELETE',headers:{Prefer:'return=minimal'}});
-   events=[];lastCheckinId=null;$('behaviorOutcomePanel').hidden=true;$('behaviorFeedback').hidden=true;render();detail('All behavior records deleted. Your nutrition journal was preserved.');$('behaviorSuggestion').textContent='';
-  }catch(e){detail('Could not delete behavior records: '+e.message)}
+   const uid=validOwner();
+   // Disable collection before deletion so nothing is silently recorded afterward.
+   if(settings?.checkins_enabled||settings?.app_usage_enabled){
+     await api('/rest/v1/nutrition_behavior_settings?user_id=eq.'+encodeURIComponent(uid),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({checkins_enabled:false,app_usage_enabled:false,updated_at:new Date().toISOString()})});
+   }
+   settings={...settings,checkins_enabled:false,app_usage_enabled:false};
+   observingStart=null;checkins.checked=false;usage.checked=false;form.hidden=true;
+   await api('/rest/v1/nutrition_behavior_events?user_id=eq.'+encodeURIComponent(uid),{method:'DELETE',headers:{Prefer:'return=minimal'}});
+   events=[];lastCheckinId=null;$('behaviorOutcomePanel').hidden=true;$('behaviorFeedback').hidden=true;render();
+   detail('Behavior collection turned off and all stored behavior records deleted. Your meals and goals remain unchanged.');
+   $('behaviorSuggestion').textContent='';
+  }catch(e){detail('Unable to complete deletion: '+e.message+'. Check your saved switches and try again.');await refresh()}
  });
  document.addEventListener('visibilitychange',()=>{if(document.hidden){finish()}else begin()});
  window.addEventListener('pagehide',()=>{finish()});
