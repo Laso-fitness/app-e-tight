@@ -38,9 +38,15 @@ function create({api,getSession,toast}){
      checkins.checked=!!settings.checkins_enabled;usage.checked=!!settings.app_usage_enabled;
      form.hidden=!settings.checkins_enabled;
      detail(!settings.checkins_enabled&&!settings.app_usage_enabled?'Off by default. Choose precisely what to record.':'Your choices are private. You can turn them off or delete entries any time.');
-     const r=await api('/rest/v1/nutrition_behavior_events?select=id,event_type,recorded_at,hunger,craving,mood,context,trigger,action,minutes_visible,suggestion_helpful,sleep_hours,movement_minutes,phone_screen_minutes_reported,linked_meal_id,outcome&user_id=eq.'+encodeURIComponent(uid)+'&order=recorded_at.desc&limit=200');
+     const [checkRows,usageRows]=await Promise.all([
+       api('/rest/v1/nutrition_behavior_events?select=id,event_type,recorded_at,hunger,craving,mood,context,trigger,action,suggestion_helpful,sleep_hours,movement_minutes,phone_screen_minutes_reported,linked_meal_id,outcome&event_type=eq.checkin&user_id=eq.'+encodeURIComponent(uid)+'&order=recorded_at.desc&limit=200'),
+       settings.app_usage_enabled
+         ?api('/rest/v1/nutrition_behavior_events?select=id,event_type,recorded_at,minutes_visible&event_type=eq.app_session&user_id=eq.'+encodeURIComponent(uid)+'&order=recorded_at.desc&limit=40')
+         :Promise.resolve([])
+     ]);
      if(uid!==validOwner()||seq!==epoch)return;
-     events=r||[];render();begin();if(settings.checkins_enabled)loadMeals();
+     events=[...(checkRows||[]),...(usageRows||[])].sort((a,b)=>Date.parse(b.recorded_at)-Date.parse(a.recorded_at));
+     render();begin();if(settings.checkins_enabled)loadMeals();
    }catch(e){detail('Behavior tracking is unavailable: '+e.message)}
  }
  function text(tag,content,cls){const e=document.createElement(tag);e.textContent=content;if(cls)e.className=cls;return e}
@@ -184,7 +190,7 @@ function create({api,getSession,toast}){
  });
  document.addEventListener('visibilitychange',()=>{if(document.hidden){finish()}else begin()});
  window.addEventListener('pagehide',()=>{finish()});
- setInterval(()=>{if(observingStart!==null){finish().finally(begin)}},60000);
+ setInterval(()=>{if(observingStart!==null){finish().finally(begin)}},180000);
  return {sessionChanged,refresh};
 }
 window.AppETightBehavior={create};
