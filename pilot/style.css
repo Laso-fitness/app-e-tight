@@ -46,3 +46,12 @@ body:not(.is-authenticated)>aside,body:not(.is-authenticated)>main{display:none}
 #behaviorDelete{background:transparent;border:1px solid #b5a69f;border-radius:8px;padding:9px 13px;color:#7e413d;font-size:12px;cursor:pointer}
 #behaviorStatus{color:#466d60;min-height:1.5em}
 @media(max-width:630px){.behavior-ranges{grid-template-columns:1fr}.behavior-panel{padding:16px}.behavior-panel .primary{width:100%}}
+
+
+.behavior-feedback{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 16px}
+.behavior-feedback[hidden]{display:none}
+.behavior-feedback span{color:#315345;font-size:13px;font-weight:700;margin-right:4px}
+.behavior-feedback button,.behavior-actions #behaviorExport{padding:9px 14px;min-height:38px;border:1px solid #5d967f;background:#f9fffa;color:#245e47;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+.behavior-feedback button:hover,.behavior-actions #behaviorExport:hover{background:#e4f7ea}
+.behavior-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+@media(max-width:630px){.behavior-actions{flex-direction:column;align-items:stretch}.behavior-actions button{width:100%}}
