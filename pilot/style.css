@@ -68,3 +68,30 @@ body:not(.is-authenticated)>aside,body:not(.is-authenticated)>main{display:none}
 .behavior-followup select{display:block;margin-top:6px;min-height:42px;border:1px solid #a2bcae;border-radius:8px;background:#fff;padding:8px 11px;width:100%;color:#1b4234}
 .behavior-followup button{align-self:flex-end;min-height:42px;border-radius:8px;background:#2c7358;color:#fff;border:0;padding:10px 15px;font-size:13px;cursor:pointer}
 .behavior-extras .metadata{margin:10px 0;color:#44665a}
+
+
+/* Personal Rhythms — affirmative consent, quiet and nonjudgmental. */
+.rhythm-panel{border:1px solid #709b89;background:linear-gradient(135deg,#f7fbf7,#eaf5ed);border-radius:17px;padding:clamp(17px,3vw,28px);margin:24px 0;color:#1d4938}
+.rhythm-panel h2{font-size:clamp(26px,3vw,34px);letter-spacing:-.04em;margin:7px 0}
+.rhythm-panel h3{font-size:20px;letter-spacing:-.03em}
+.rhythm-panel .panel-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;flex-wrap:wrap}
+.rhythm-choices{display:grid;gap:13px;margin:19px 0;border-block:1px solid #c3d9ce;padding:17px 0}
+.rhythm-choices .check{display:flex;align-items:flex-start;gap:9px;font-size:14px;line-height:1.5;color:#244f3d}
+.rhythm-choices input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:#277a58}
+.rhythm-choices input:disabled{opacity:.6}
+.rhythm-controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.rhythm-controls button,.rhythm-response button,.rhythm-actions button{border:1px solid #609c81;background:#f7fffa;color:#195037;border-radius:9px;min-height:43px;padding:10px 14px;cursor:pointer;font-weight:750;font-size:13px}
+.rhythm-controls .primary{background:#236b4e;color:#fff;border-color:#236b4e}
+.rhythm-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:12px}
+.rhythm-card{background:#fff;border:1px solid #c4d8c9;border-radius:14px;padding:18px}
+.rhythm-card h3{margin:0 0 12px}
+.rhythm-card label{font-size:13px;font-weight:700;color:#315947;display:block;flex:1;min-width:170px}
+.rhythm-card select{width:100%;min-height:43px;background:#fff;color:#1a422f;border:1px solid #94b1a2;border-radius:8px;padding:9px;margin-top:5px}
+.rhythm-response{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:20px 0}
+.rhythm-response span{flex-basis:100%;font-size:13px;font-weight:750}
+#rhythmWhyPanel{margin:14px 0;padding:14px;background:#e8f6eb;border-radius:10px}
+#rhythmHungerFeedback{color:#1f684e}
+#rhythmDataControls{margin-top:20px}
+.rhythm-panel p.metadata{line-height:1.55}
+@media(max-width:780px){.rhythm-columns{grid-template-columns:1fr}}
+@media(max-width:540px){.rhythm-panel{padding:15px}.rhythm-controls button{flex:1}.rhythm-response button{flex:1}}
