@@ -10,7 +10,7 @@ const health=window.NutritionHealth.create({api,getSession:()=>session,onGoal:lo
 let preferences=null,coachClients=[],clientEpoch=0,preferencesEpoch=0;
 const onboarding=window.NutritionOnboarding.create({api,getSession:()=>session,signIn:()=>show('accountDialog')});
 const discovery=window.NutritionDiscovery.create({getState:()=>({totals:C.totals(rows),preferences}),getSession:()=>session,token,signIn:()=>show('accountDialog')});
-const behavior=window.AppETightBehavior.create({api,getSession:()=>session,toast});
+const behavior=window.AppETightBehavior?.create({api,getSession:()=>session,toast})||{sessionChanged(){},refresh:async()=>{}};
 const defaultCoach='a20479c8-1339-4443-bc7a-9a2346cd3e26';
 const format=n=>new Intl.NumberFormat(undefined,{maximumFractionDigits:1}).format(n);
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(timer);timer=setTimeout(()=>$('toast').hidden=true,5000);}
