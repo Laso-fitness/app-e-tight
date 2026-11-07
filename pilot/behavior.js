@@ -112,8 +112,12 @@ function create({api,getSession,toast}){
    const previous=settings;
    try{
      if(previous?.app_usage_enabled&&!updated.app_usage_enabled)await finish();
-     await api('/rest/v1/nutrition_behavior_settings?on_conflict=user_id',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(updated)});
-     settings=updated;form.hidden=!updated.checkins_enabled;if(!updated.checkins_enabled){lastCheckinId=null;$('behaviorOutcomePanel').hidden=true;}detail('Saved. No phone-wide Screen Time or location permission has been requested.');begin();await refresh();
+     if(previous?.user_id){
+       await api('/rest/v1/nutrition_behavior_settings?user_id=eq.'+encodeURIComponent(uid),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({checkins_enabled:updated.checkins_enabled,app_usage_enabled:updated.app_usage_enabled,updated_at:updated.updated_at})});
+     }else{
+       await api('/rest/v1/nutrition_behavior_settings',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'missing=default,return=minimal'},body:JSON.stringify(updated)});
+     }
+     settings={...previous,...updated};form.hidden=!updated.checkins_enabled;if(!updated.checkins_enabled){lastCheckinId=null;$('behaviorOutcomePanel').hidden=true;}detail('Saved. No phone-wide Screen Time or location permission has been requested.');begin();await refresh();
    }catch(e){detail('Preferences not saved: '+e.message);if(previous){checkins.checked=!!previous.checkins_enabled;usage.checked=!!previous.app_usage_enabled}}
    finally{busy=false;$('behaviorSaveSettings').disabled=false}
  }
