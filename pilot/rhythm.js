@@ -121,10 +121,17 @@ function create({api,getSession}){
      if(growl){try{await armAudio()}catch{/* No sound if the browser refuses local audio. */}}
      // Saving choices never starts a phone-wide permission flow.
      const uid=current();
-     await api('/rest/v1/nutrition_behavior_settings?on_conflict=user_id',{
-       method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
-       body:JSON.stringify({user_id:uid,hunger_forecast_enabled:enabled,growl_enabled:growl,digestive_tracking_enabled:digest,updated_at:new Date().toISOString()})
-     });
+     const changes={hunger_forecast_enabled:enabled,growl_enabled:growl,digestive_tracking_enabled:digest,updated_at:new Date().toISOString()};
+     if(settings?.user_id){
+       await api('/rest/v1/nutrition_behavior_settings?user_id=eq.'+encodeURIComponent(uid),{
+         method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(changes)
+       });
+     }else{
+       await api('/rest/v1/nutrition_behavior_settings',{
+         method:'POST',headers:{'Content-Type':'application/json','Prefer':'missing=default,return=minimal'},
+         body:JSON.stringify({user_id:uid,checkins_enabled:false,app_usage_enabled:false,...changes})
+       });
+     }
      settings={...settings,hunger_forecast_enabled:enabled,growl_enabled:growl,digestive_tracking_enabled:digest};
      await refresh();
      status('Preferences saved. Automatic cues require enough verified observations and the app to remain open. No background tracking is active.');
