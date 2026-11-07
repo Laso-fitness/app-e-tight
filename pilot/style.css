@@ -55,3 +55,16 @@ body:not(.is-authenticated)>aside,body:not(.is-authenticated)>main{display:none}
 .behavior-feedback button:hover,.behavior-actions #behaviorExport:hover{background:#e4f7ea}
 .behavior-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 @media(max-width:630px){.behavior-actions{flex-direction:column;align-items:stretch}.behavior-actions button{width:100%}}
+
+
+/* Optional context and follow-up controls: no hidden device sensors. */
+.behavior-extras{margin:15px 0;border:1px solid #bdd1c4;border-radius:11px;padding:12px 14px;background:#f7fbf7}
+.behavior-extras summary{cursor:pointer;color:#275a47;font-weight:750;font-size:13px;line-height:1.5}
+.behavior-extras[open] summary{margin-bottom:14px}
+.behavior-extras input,.behavior-extras select{width:100%;min-height:43px;background:#fff;border:1px solid #9abcb0;border-radius:8px;padding:10px;color:#173e32}
+.behavior-followup{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 16px;border-top:1px solid #c9ded0;padding-top:15px}
+.behavior-followup[hidden]{display:none}
+.behavior-followup label{flex:1;min-width:200px;font-size:13px;color:#315b48;font-weight:700}
+.behavior-followup select{display:block;margin-top:6px;min-height:42px;border:1px solid #a2bcae;border-radius:8px;background:#fff;padding:8px 11px;width:100%;color:#1b4234}
+.behavior-followup button{align-self:flex-end;min-height:42px;border-radius:8px;background:#2c7358;color:#fff;border:0;padding:10px 15px;font-size:13px;cursor:pointer}
+.behavior-extras .metadata{margin:10px 0;color:#44665a}
