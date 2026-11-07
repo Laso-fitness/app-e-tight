@@ -129,7 +129,7 @@ function create({api,getSession,toast}){
    $('behaviorFeedback').hidden=!lastCheckinId;
    const advice=Core.guidance(payload.trigger,events);
    $('behaviorSuggestion').textContent=advice.text+' Support is optional. No food choices are labeled good or bad.';
-   detail('Check-in saved. Thanks for sharing what was happening.');await refresh();
+   detail('Check-in saved. Thanks for sharing what was happening.');window.dispatchEvent(new Event('appetight:checkin-saved'));await refresh();
   }catch(err){detail('Check-in was not saved: '+err.message)}
   finally{busy=false;$('behaviorSaveCheckin').disabled=false}
  });
