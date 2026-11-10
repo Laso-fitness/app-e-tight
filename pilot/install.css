@@ -1,0 +1,1 @@
+[data-install-app]{min-height:44px}#installAppDialog{max-width:430px;width:calc(100% - 40px);max-height:85dvh;overflow:auto;border:0;border-radius:20px;padding:24px;background:#fff;color:#172e29}#installAppDialog::backdrop{background:#0008}#installAppDialog img{width:72px;height:72px;border-radius:16px}#installAppDialog li{margin:12px 0}#installAppDialog button{min-height:44px}

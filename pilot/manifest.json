@@ -1,0 +1,24 @@
+{
+  "id": "/pilot/",
+  "name": "App-E-Tight \u00b7 LasO",
+  "short_name": "App-E-Tight",
+  "start_url": "/pilot/",
+  "scope": "/pilot/",
+  "display": "standalone",
+  "background_color": "#172e29",
+  "theme_color": "#172e29",
+  "icons": [
+    {
+      "src": "/pilot/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pilot/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
