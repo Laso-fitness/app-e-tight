@@ -16,7 +16,7 @@
    : '<ol><li>Open this page in <strong>Chrome or Edge</strong>.</li><li>Open the browser menu.</li><li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>, then confirm.</li></ol>';
   if(!dialog.open) dialog.showModal();
  }
- buttons.forEach(b => { b.innerHTML = '<img src="/pilot/laso-icon-v2-180.png" alt="" width="32" height="32" style="border-radius:8px;vertical-align:middle;margin-right:8px">Add to Home Screen'; b.addEventListener('click',install); });
+ buttons.forEach(b => b.addEventListener('click',install));
  window.addEventListener('beforeinstallprompt',e => { e.preventDefault(); pending = e; });
  window.addEventListener('appinstalled',() => { pending = null; buttons.forEach(b => b.hidden = true); if(dialog.open) dialog.close(); });
  refresh();
