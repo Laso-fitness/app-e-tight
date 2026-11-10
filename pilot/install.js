@@ -5,7 +5,7 @@
  const refresh = () => buttons.forEach(b => b.hidden = installed());
  const dialog = document.createElement('dialog');
  dialog.id = 'installAppDialog'; dialog.setAttribute('aria-labelledby','installAppTitle');
- dialog.innerHTML = `<img src="/pilot/icon-180.png" alt="LasO 360"><h2 id="installAppTitle">App-E-Tight on your Home Screen</h2><div id="installAppInstructions"></div><p>Your existing account and journal stay the same. Internet is required. You may need to sign in the first time you open the installed app.</p><button type="button" id="closeInstallApp">Close</button>`;
+ dialog.innerHTML = `<img src="/pilot/laso-icon-v2-180.png" alt="LasO 360"><h2 id="installAppTitle">App-E-Tight on your Home Screen</h2><div id="installAppInstructions"></div><p>Your existing account and journal stay the same. Internet is required. You may need to sign in the first time you open the installed app.</p><button type="button" id="closeInstallApp">Close</button>`;
  document.body.append(dialog);
  dialog.querySelector('#closeInstallApp').onclick = () => dialog.close();
  async function install() {
@@ -16,7 +16,7 @@
    : '<ol><li>Open this page in <strong>Chrome or Edge</strong>.</li><li>Open the browser menu.</li><li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>, then confirm.</li></ol>';
   if(!dialog.open) dialog.showModal();
  }
- buttons.forEach(b => b.addEventListener('click',install));
+ buttons.forEach(b => { b.innerHTML = '<img src="/pilot/laso-icon-v2-180.png" alt="" width="32" height="32" style="border-radius:8px;vertical-align:middle;margin-right:8px">Add to Home Screen'; b.addEventListener('click',install); });
  window.addEventListener('beforeinstallprompt',e => { e.preventDefault(); pending = e; });
  window.addEventListener('appinstalled',() => { pending = null; buttons.forEach(b => b.hidden = true); if(dialog.open) dialog.close(); });
  refresh();
