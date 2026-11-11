@@ -1,5 +1,5 @@
 (function(root){'use strict';
-const message="Hmm, you not eating? 😄 Haven't seen a check-in lately—eating but forgot to log? No pressure. Check in when you're ready: https://app-e-tight.netlify.app/pilot/";
+const message="Reggie / App-E-Tight: Life can ask a lot of you. You deserve care too. No pressure to catch up—one honest check-in is enough: https://app-e-tight.netlify.app/pilot/";
 function validPhone(value){return /^\+[1-9]\d{7,14}$/.test(String(value||''));}
 function due({lastActivity,delayDays=3,pausedUntil,lastNudge,now=Date.now()}){
  const last=Date.parse(lastActivity);if(!Number.isFinite(last)||last>now)return false;

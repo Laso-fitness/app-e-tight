@@ -1,0 +1,7 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');require('../pilot/aura-core.js');const C=global.AppETightAuraCore;
+test('participation starts at zero without inventing health',()=>{const p=C.participation({});assert.equal(p.sparks,0);assert.equal(p.activeToday,false);assert.equal(p.next,3);assert.equal(p.health_score,undefined)});
+test('three and seven active-day milestones do not require a streak',()=>{assert.deepEqual(C.participation({active_days:3}).milestones.map(x=>x.earned),[true,false]);assert.deepEqual(C.participation({active_days:7}).milestones.map(x=>x.earned),[true,true]);assert.equal(C.participation({active_days:3,active_today:false}).sparks,3)});
+test('extra daily records cannot alter server active-day total',()=>{assert.equal(C.participation({active_days:1,entries:100}).sparks,1)});
+test('compassionate notes do not disclose family circumstances or claim clinical knowledge',()=>{for(let i=0;i<4;i++){const s=C.note(i);assert.ok(s.length>40);assert.doesNotMatch(s,/cancer|mother|husband|diagnos|Naheed|Perkins/i)}});
+
+test('completed care tasks add points independently of daily journal point',()=>{const p=C.participation({active_days:2,participation_days:1,task_points:2,breathing_completed_today:true});assert.equal(p.sparks,3);assert.equal(p.breathingCompleted,true)});
