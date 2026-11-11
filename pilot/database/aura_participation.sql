@@ -6,11 +6,12 @@ begin
  select name into zone from pg_timezone_names where name=p_timezone limit 1;
  if zone is null then raise exception 'Choose a valid timezone' using errcode='22023'; end if;
  today := (now() at time zone zone)::date;
- with active as (
+ with journal as (
   select (d.created_at at time zone zone)::date as day from public.nutrition_diary_entries d where d.user_id=who and d.created_at<=now() and d.entry_type in ('meal','water')
   union
   select (b.created_at at time zone zone)::date from public.nutrition_behavior_events b where b.user_id=who and b.created_at<=now() and b.event_type='checkin'
- ) select jsonb_build_object('active_days',count(*),'active_today',coalesce(bool_or(day=today),false),'local_date',today,'basis','saved_participation_days','health_score',null) into result from active;
+ ), tasks as (select created_at,completed_on from public.nutrition_aura_task_completions where user_id=who and created_at<=now()), active as (select day from journal union select (created_at at time zone zone)::date from tasks)
+ select jsonb_build_object('active_days',(select count(*) from active),'participation_days',(select count(*) from journal),'task_points',(select count(*) from tasks),'breathing_completed_today',exists(select 1 from tasks where completed_on=current_date),'active_today',exists(select 1 from active where day=today),'local_date',today,'basis','participation_plus_self_reported_tasks','health_score',null) into result;
  return result;
 end;
 $$;
